@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modulo 1: Fundamentos | STM32N6 Industrial Academy</title>
+<style>
+:root{--bg-primary:#0f1117;--bg-card:#1a1d29;--accent:#f59e0b;--success:#10b981;--danger:#ef4444;--text-primary:#e5e7eb;--text-secondary:#9ca3af;--border:#2d3142;--code-bg:#0d0f17;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.7;min-height:100vh;}
+.container{max-width:900px;margin:0 auto;padding:20px;}
+.header{text-align:center;padding:40px 0 20px;border-bottom:1px solid var(--border);margin-bottom:30px;}
+.header h1{font-size:2rem;color:var(--accent);margin-bottom:10px;}
+.header p{color:var(--text-secondary);font-size:1.05rem;}
+.badge{display:inline-block;background:var(--accent);color:#000;font-size:.75rem;font-weight:bold;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-top:12px;letter-spacing:.5px;}
+.progress-wrapper{margin-bottom:30px;}
+.progress-label{display:flex;justify-content:space-between;font-size:.85rem;color:var(--text-secondary);margin-bottom:8px;}
+.progress-bar{width:100%;height:10px;background:var(--border);border-radius:5px;overflow:hidden;}
+.progress-fill{height:100%;width:0%;background:var(--accent);border-radius:5px;transition:width .5s ease;}
+.card{background:var(--bg-card);border-radius:12px;padding:24px;margin-bottom:24px;border:1px solid var(--border);transition:border-color .2s;}
+.card:hover{border-color:#3d4258;}
+.card h2{color:var(--accent);font-size:1.4rem;margin-bottom:8px;}
+.card h3{color:var(--text-primary);font-size:1.15rem;margin:20px 0 10px;border-left:3px solid var(--accent);padding-left:12px;}
+.card h4{color:var(--text-secondary);font-size:.95rem;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px;}
+.card p{color:var(--text-secondary);margin-bottom:12px;}
+.card ul,.card ol{margin-left:20px;color:var(--text-secondary);margin-bottom:14px;}
+.card li{margin-bottom:6px;}
+.card strong{color:var(--text-primary);}
+pre{background:var(--code-bg);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:18px 22px;overflow-x:auto;margin:16px 0;font-family:'Fira Code','Consolas',monospace;font-size:.85rem;line-height:1.6;color:#c9d1d9;}
+code{font-family:'Fira Code','Consolas',monospace;background:var(--code-bg);padding:2px 8px;border-radius:4px;font-size:.9em;color:var(--accent);}
+pre code{padding:0;background:none;color:inherit;}
+.diagram{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:20px;font-family:'Fira Code','Consolas',monospace;font-size:.82rem;line-height:1.5;color:#c9d1d9;overflow-x:auto;margin:16px 0;}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.9rem;}
+th{background:#252a3a;color:var(--accent);text-align:left;padding:12px 14px;border-bottom:2px solid var(--border);}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-secondary);}
+tr:hover td{background:#1f2230;}
+.quiz-card{background:var(--bg-card);border-radius:12px;padding:24px;margin-bottom:24px;border:1px solid var(--border);}
+.quiz-card h3{color:var(--accent);margin-bottom:16px;font-size:1.15rem;}
+.quiz-option{display:block;width:100%;text-align:left;background:#252a3a;color:var(--text-primary);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:10px;cursor:pointer;font-size:.95rem;transition:all .2s;}
+.quiz-option:hover:not(:disabled){background:#2e3447;border-color:var(--accent);}
+.quiz-option.correct{background:rgba(16,185,129,.15);border-color:var(--success);color:var(--success);}
+.quiz-option.wrong{background:rgba(239,68,68,.15);border-color:var(--danger);color:var(--danger);}
+.quiz-option:disabled{cursor:default;opacity:.9;}
+.quiz-feedback{margin-top:14px;padding:14px;border-radius:8px;font-size:.9rem;display:none;}
+.quiz-feedback.show{display:block;}
+.quiz-feedback.correct{background:rgba(16,185,129,.1);border:1px solid var(--success);color:var(--success);}
+.quiz-feedback.wrong{background:rgba(239,68,68,.1);border:1px solid var(--danger);color:var(--danger);}
+.checklist-item{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:.95rem;}
+.checklist-item:last-child{border-bottom:none;}
+.check-icon{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:inline-flex;align-items:center;justify-content:center;margin-right:14px;font-size:.75rem;flex-shrink:0;}
+.check-icon.checked{background:var(--success);border-color:var(--success);color:#fff;}
+.complete-btn{display:block;width:100%;padding:16px;background:var(--accent);color:#000;border:none;border-radius:10px;font-size:1rem;font-weight:bold;cursor:pointer;margin-top:20px;transition:opacity .2s,transform .1s;}
+.complete-btn:hover{opacity:.9;}
+.complete-btn:active{transform:scale(.98);}
+.complete-btn:disabled{background:var(--success);color:#fff;cursor:default;}
+.completion-msg{text-align:center;padding:16px;background:rgba(16,185,129,.1);border:1px solid var(--success);border-radius:10px;color:var(--success);margin-top:16px;display:none;}
+.completion-msg.show{display:block;}
+.section-title{color:var(--text-primary);font-size:1.6rem;margin:40px 0 20px;text-align:center;}
+.section-subtitle{color:var(--text-secondary);text-align:center;margin-bottom:30px;font-size:.95rem;}
+.highlight-box{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:16px;margin:16px 0;}
+.highlight-box p{margin:0;}
+@media(max-width:600px){.container{padding:12px;}.header h1{font-size:1.5rem;}.card{padding:18px;}pre{padding:14px;font-size:.78rem;}}
+::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-track{background:var(--bg-primary);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}::-webkit-scrollbar-thumb:hover{background:#3d4258;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<header class="header">
+<h1>STM32N6 Industrial Academy</h1>
+<p>Modulo 1: Fundamentos del STM32N6</p>
+<span class="badge">Nivel Principiante</span>
+</header>
+
+<!-- BARRA DE PROGRESO -->
+<div class="progress-wrapper">
+<div class="progress-label"><span>Progreso del modulo</span><span id="progress-text">0%</span></div>
+<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+</div>
+
+<!-- LECCION 1 -->
+<div class="card" id="leccion1">
+<h2>Leccion 1: Introduccion al STM32N6</h2>
+<p>El <strong>STM32N6</strong> es el microcontrolador mas avanzado de la familia STM32 de STMicroelectronics. Disenado para aplicaciones industriales de proxima generacion, integra por primera vez un <strong>procesador neuronal (NPU)</strong> junto a un nucleo CPU de alto rendimiento.</p>
+
+<h3>Arquitectura heterogenea</h3>
+<p>El STM32N6 combina dos procesadores especializados en un solo chip:</p>
+<ul>
+<li><strong>Cortex-M55</strong> &mdash; CPU principal de 32 bits, arquitectura ARMv8.1-M. Ejecuta el firmware principal, protocolos de comunicacion y logica de control.</li>
+<li><strong>Ethos-U55</strong> &mdash; NPU (Neural Processing Unit) dedicado para acelerar inferencias de IA/ML. Soporta operaciones INT8 y INT16 con hasta 512 MAC/ciclo.</li>
+</ul>
+
+<div class="highlight-box">
+<p><strong>Concepto clave:</strong> La arquitectura heterogenea permite ejecutar inferencias de IA localmente (edge AI) sin depender de la nube, reduciendo latencia y consumo de energia.</p>
+</div>
+
+<h3>Diagrama de bloques del STM32N6</h3>
+<div class="diagram">
++------------------------------------------------------------------+
+|                      STM32N6xx Block Diagram                     |
++------------------------------------------------------------------+
+|                                                                  |
+|  +-------------------+      +-------------------+                |
+|  |   Cortex-M55      |      |   Ethos-U55 NPU   |                |
+|  |   (CPU Principal) |      |   (IA/ML Engine)  |                |
+|  |   Hasta 400 MHz   |      |   512 MAC/ciclo   |                |
+|  +--------+----------+      +---------+---------+                |
+|           |                           |                          |
+|           +-------------+-------------+                          |
+|                         |                                        |
+|                  +------v------+                                 |
+|                  |   BusMatrix |                                 |
+|                  |  (AHB/APB)  |                                 |
+|                  +------+------+                                 |
+|                         |                                        |
+|      +------------------+------------------+                     |
+|      |                  |                  |                     |
+| +----v------+   +-------v-------+   +------v------+             |
+| |   SRAM    |   |    Flash      |   | Perifericos |             |
+| |  2x 512KB |   |    2x 1MB     |   | GPIO, UART  |             |
+| |   (TCM)   |   |    (NVM)      |   | SPI, I2C    |             |
+| +-----------+   +---------------+   | TIM, ADC    |             |
+|                                     | CAN, ETH    |             |
+|                                     +-------------+             |
+|                                                                  |
++------------------------------------------------------------------+
+</div>
+
+<h3>Tabla comparativa con otras familias STM32</h3>
+<table>
+<thead><tr><th>Caracteristica</th><th>STM32F4</th><th>STM32H7</th><th>STM32N6</th></tr></thead>
+<tbody>
+<tr><td>Nucleo CPU</td><td>Cortex-M4</td><td>Cortex-M7</td><td>Cortex-M55 + Ethos-U55</td></tr>
+<tr><td>Frecuencia maxima</td><td>180 MHz</td><td>480 MHz</td><td>400 MHz + NPU</td></tr>
+<tr><td>SRAM</td><td>384 KB</td><td>1 MB</td><td>1 MB + TCM dedicado</td></tr>
+<tr><td>Flash</td><td>2 MB</td><td>2 MB</td><td>2 MB</td></tr>
+<tr><td>Aceleracion IA</td><td>No</td><td>No</td><td>Si (NPU Ethos-U55)</td></tr>
+<tr><td>Proceso de fabricacion</td><td>90 nm</td><td>40 nm</td><td>16 nm FinFET</td></tr>
+<tr><td>Aplicacion tipica</td><td>Control general</td><td>Alto rendimiento</td><td>Edge AI + Industrial</td></tr>
+</tbody>
+</table>
+
+<div class="highlight-box">
+<p><strong>Aplicaciones industriales tipicas:</strong> Vision artificial para inspeccion de calidad, prediccion de fallos en motores, reconocimiento de voz en interfaces HMI, clasificacion de sensores IoT, y control adaptativo en tiempo real.</p>
+</div>
+</div>
+
+<!-- LECCION 2 -->
+<div class="card" id="leccion2">
+<h2>Leccion 2: Instalacion de STM32CubeIDE</h2>
+<p><strong>STM32CubeIDE</strong> es el entorno de desarrollo integrado oficial de STMicroelectronics. Combina editor de codigo, compilador GCC, depurador GDB y el configurador grafico del microcontrolador en una sola herramienta gratuita.</p>
+
+<h3>Paso 1: Descarga</h3>
+<ol>
+<li>Visita <strong>www.st.com/stm32cubeide</strong></li>
+<li>Haz clic en "Get Software" y selecciona tu sistema operativo (Windows, Linux o macOS).</li>
+<li>Registrate con una cuenta gratuita de myST si es necesario.</li>
+<li>Descarga el instalador (aproximadamente 1.5 GB).</li>
+</ol>
+
+<h3>Paso 2: Instalacion</h3>
+<ol>
+<li>Ejecuta el instalador descargado con permisos de administrador.</li>
+<li>Acepta los terminos de la licencia.</li>
+<li>Selecciona el directorio de instalacion (por defecto: <code>C:\ST\STM32CubeIDE</code>).</li>
+<li>Elige los componentes: asegurate de incluir <strong>STM32CubeMX</strong> integrado.</li>
+<li>Espera la instalacion (puede tardar 15-30 minutos).</li>
+</ol>
+
+<h3>Paso 3: Configuracion del Workspace</h3>
+<ol>
+<li>Al iniciar STM32CubeIDE, selecciona un directorio de <em>workspace</em>.</li>
+<li>Recomendacion: <code>C:\STM32_Workspace\N6_Projects</code></li>
+<li>El workspace almacena todos tus proyectos y configuraciones.</li>
+</ol>
+
+<h3>Paso 4: Crear el primer proyecto</h3>
+<div class="highlight-box"><p><strong>Menu:</strong> File &rarr; New &rarr; STM32 Project</p></div>
+<ol>
+<li>Se abrira el <strong>MCU Selector</strong> (STM32CubeMX integrado).</li>
+<li>En el campo de busqueda, escribe <code>STM32N6</code> y selecciona tu variante (ej: STM32N657xx).</li>
+<li>Haz clic en <strong>Next</strong>.</li>
+<li>Asigna un nombre al proyecto: <code>N6_Blink_LED</code></li>
+<li>Selecciona <strong>C</strong> como lenguaje y haz clic en <strong>Finish</strong>.</li>
+</ol>
+
+<h3>Estructura de carpetas generada</h3>
+<div class="diagram">
+N6_Blink_LED/
+|
++-- Core/
+|   +-- Inc/              &lt;-- Headers (.h)
+|   |   +-- main.h
+|   |
+|   +-- Src/              &lt;-- Codigo fuente (.c)
+|       +-- main.c        &lt;-- Archivo principal
+|
++-- Drivers/
+|   +-- STM32N6xx_HAL_Driver/   &lt;-- Libreria HAL
+|   +-- CMSIS/                  &lt;-- CMSIS-Core
+|
++-- STM32N6xx_FLASH.ld    &lt;-- Script de linker
++-- startup_stm32n6xx.s   &lt;-- Codigo de arranque
++-- .cproject             &lt;-- Configuracion del proyecto
+</div>
+
+<div class="highlight-box">
+<p><strong>Consejo:</strong> La primera compilacion puede tardar varios minutos porque STM32CubeIDE debe compilar toda la libreria HAL. Las siguientes compilaciones seran mucho mas rapidas.</p>
+</div>
+</div>
+
+<!-- LECCION 3: Primer proyecto HAL - Blink LED -->
+<div class="card" id="leccion3">
+<h2>Leccion 3: Primer proyecto HAL &mdash; Blink LED en PC13</h2>
+<p>En esta leccion escribiremos el firmware mas basico para el STM32N6: un programa que hace parpadear un LED conectado al pin <strong>PC13</strong>. Este es el equivalente al "Hola Mundo" en el mundo de los microcontroladores.</p>
+
+<h3>Conceptos previos</h3>
+<ul>
+<li><strong>HAL</strong> (Hardware Abstraction Layer): libreria proporcionada por ST que abstrae el acceso a los perifericos del microcontrolador.</li>
+<li><strong>GPIO</strong> (General Purpose Input/Output): pines configurables como entrada o salida digital.</li>
+<li><strong>PC13</strong>: pin 13 del puerto C. En la mayoria de placas de desarrollo STM32, este pin controla un LED integrado.</li>
+</ul>
+
+<h3>Codigo HAL completo comentado linea por linea</h3>
+<pre><code>// ============================================================================
+// main.c - Blink LED en PC13 para STM32N6
+// ============================================================================
+
+#include "stm32n6xx_hal.h"   // Header HAL para STM32N6: funciones de
+                             // inicializacion y control de perifericos
+
+// ----------------------------------------------------------------------------
+// Prototipos de funciones
+// ----------------------------------------------------------------------------
+void SystemClock_Config(void);   // Configura el arbol de relojes del MCU
+static void MX_GPIO_Init(void);  // Configura los pines GPIO
+
+// ----------------------------------------------------------------------------
+// Funcion principal: punto de entrada del programa
+// ----------------------------------------------------------------------------
+int main(void)
+{
+    // 1. Inicializar el sistema HAL: debe ser la primera instruccion
+    //    Resetea todos los perifericos, configura la memoria cache y
+    //    prepara el sistema para su uso
+    HAL_Init();
+
+    // 2. Configurar el arbol de relojes del sistema
+    //    Establece las frecuencias de trabajo de CPU, buses y perifericos
+    SystemClock_Config();
+
+    // 3. Inicializar los pines GPIO
+    //    Configura PC13 como salida digital
+    MX_GPIO_Init();
+
+    // ----------------------------------------------------------------------------
+    // Bucle principal (super-loop): se ejecuta indefinidamente
+    // ----------------------------------------------------------------------------
+    while (1)
+    {
+        // Invertir el estado logico del pin PC13 (ON -> OFF, OFF -> ON)
+        // Primer parametro: puerto GPIO (GPIOC)
+        // Segundo parametro: numero de pin (GPIO_PIN_13)
+        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+
+        // Espera bloqueante de 500 milisegundos
+        // El CPU se queda en modo espera durante este tiempo
+        HAL_Delay(500);
+
+        // Efecto visual: el LED parpadea a 1 Hz (encendido 500ms, apagado 500ms)
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Configuracion del arbol de relojes
+// ----------------------------------------------------------------------------
+void SystemClock_Config(void)
+{
+    // Estructura de configuracion del PLL (Phase Locked Loop)
+    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+    // --- Configuracion de osciladores ---
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+    // Seleccionamos el HSI (High Speed Internal) como fuente de reloj
+
+    RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+    // Activamos el oscilador interno HSI (16 MHz por defecto)
+
+    RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+    // Usamos el valor de calibracion de fabrica para precision
+
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+    // Activamos el PLL para multiplicar la frecuencia
+
+    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+    // El PLL usa el HSI como fuente de entrada
+
+    RCC_OscInitStruct.PLL.PLLM = 4;    // Division pre-PLL:  16 MHz / 4 = 4 MHz
+    RCC_OscInitStruct.PLL.PLLN = 60;   // Multiplicacion:     4 MHz * 60 = 240 MHz
+    RCC_OscInitStruct.PLL.PLLP = 2;    // Division post-PLL: 240 MHz / 2 = 120 MHz (SYSCLK)
+
+    // Aplicamos la configuracion de osciladores
+    HAL_RCC_OscConfig(&RCC_OscInitStruct);
+
+    // --- Configuracion de buses ---
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+                                 | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+    // Configuramos todos los tipos de reloj
+
+    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+    // SYSCLK proviene del PLL (120 MHz)
+
+    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+    // AHB (Advanced High-performance Bus): sin division -> 120 MHz
+
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+    // APB1 (Advanced Peripheral Bus 1):   120 MHz / 2 = 60 MHz
+
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+    // APB2 (Advanced Peripheral Bus 2):   120 MHz / 2 = 60 MHz
+
+    // Aplicamos la configuracion de relojes
+    HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
+    // FLASH_LATENCY_2: 2 ciclos de espera para acceso a Flash a 120 MHz
+}
+
+// ----------------------------------------------------------------------------
+// Inicializacion de GPIO
+// ----------------------------------------------------------------------------
+static void MX_GPIO_Init(void)
+{
+    // Variable de configuracion del GPIO
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    // --- Paso 1: Habilitar el reloj del puerto GPIOC ---
+    // Todos los perifericos necesitan su reloj habilitado antes de usarse
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+
+    // --- Paso 2: Configurar el pin PC13 ---
+    GPIO_InitStruct.Pin = GPIO_PIN_13;           // Pin 13 del puerto C
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;  // Modo: Salida Push-Pull
+    GPIO_InitStruct.Pull = GPIO_NOPULL;          // Sin resistencia pull-up/down
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW; // Velocidad baja (suficiente para LED)
+
+    // Aplicamos la configuracion
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    // --- Paso 3: Estado inicial del pin ---
+    // Apagamos el LED al inicio (logica negativa en muchas placas)
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+}
+
+// ----------------------------------------------------------------------------
+// Manejador de errores (callback por defecto de HAL)
+// ----------------------------------------------------------------------------
+void Error_Handler(void)
+{
+    // Si ocurre un error critico, entramos en bucle infinito
+    // En produccion, aqui se reiniciaria el sistema o se activaria un fallo seguro
+    __disable_irq();   // Desactivamos todas las interrupciones
+    while (1) { }      // Bucle infinito de seguridad
+}</code></pre>
+
+<h3>Explicacion de cada funcion HAL utilizada</h3>
+<table>
+<thead><tr><th>Funcion HAL</th><th>Proposito</th><th>Parametros clave</th></tr></thead>
+<tbody>
+<tr><td><code>HAL_Init()</code></td><td>Inicializa la libreria HAL, configura el SysTick y establece las prioridades de interrupcion base.</td><td>Ninguno</td></tr>
+<tr><td><code>HAL_GPIO_Init()</code></td><td>Configura uno o mas pines de un puerto GPIO segun la estructura GPIO_InitTypeDef.</td><td>GPIO_TypeDef *GPIOx, GPIO_InitTypeDef *GPIO_Init</td></tr>
+<tr><td><code>HAL_GPIO_TogglePin()</code></td><td>Invierte el estado logico del pin especificado (HIGH -> LOW, LOW -> HIGH).</td><td>GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin</td></tr>
+<tr><td><code>HAL_GPIO_WritePin()</code></td><td>Escribe un valor logico explicito en el pin (GPIO_PIN_SET o GPIO_PIN_RESET).</td><td>GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState</td></tr>
+<tr><td><code>HAL_Delay()</code></td><td>Retardo bloqueante en milisegundos basado en SysTick.</td><td>uint32_t Delay (ms)</td></tr>
+<tr><td><code>HAL_RCC_OscConfig()</code></td><td>Configura los osciladores internos/externos y el PLL.</td><td>RCC_OscInitTypeDef *RCC_OscInitStruct</td></tr>
+<tr><td><code>HAL_RCC_ClockConfig()</code></td><td>Configura los divisores de reloj de los buses AHB, APB1 y APB2.</td><td>RCC_ClkInitTypeDef *RCC_ClkInitStruct, uint32_t FlashLatency</td></tr>
+<tr><td><code>__HAL_RCC_GPIOC_CLK_ENABLE()</code></td><td>Macro que habilita el reloj del periferico GPIOC.</td><td>Ninguno (macro)</td></tr>
+</tbody>
+</table>
+
+<div class="highlight-box">
+<p><strong>Nota importante:</strong> <code>HAL_Delay()</code> es bloqueante: el CPU no hace nada util durante la espera. En aplicaciones reales se usan temporizadores por interrupcion (TIM) o un RTOS para multitarea.</p>
+</div>
+</div>
+
+<!-- LECCION 4: Clock Tree basico -->
+<div class="card" id="leccion4">
+<h2>Leccion 4: Arbol de relojes (Clock Tree)</h2>
+<p>El <strong>arbol de relojes</strong> (Clock Tree) es uno de los sistemas mas criticos de un microcontrolador. Determina la frecuencia de operacion de la CPU, los buses de comunicacion y todos los perifericos. Comprenderlo es esencial para optimizar el rendimiento y el consumo energetico.</p>
+
+<h3>Fuentes de reloj principales</h3>
+<ul>
+<li><strong>HSI</strong> (High Speed Internal) &mdash; Oscilador RC interno de <strong>16 MHz</strong>. Siempre disponible, no requiere componentes externos. Precision tipica: +/- 1% a 25 C.</li>
+<li><strong>HSE</strong> (High Speed External) &mdash; Cristal o resonador externo de 4-50 MHz. Mayor precision y estabilidad. Requiere cristal + condensadores externos.</li>
+<li><strong>PLL</strong> (Phase Locked Loop) &mdash; Circuito que multiplica/divide la frecuencia de entrada para generar frecuencias mayores.</li>
+</ul>
+
+<div class="highlight-box">
+<p><strong>Regla practica:</strong> Usa <strong>HSI</strong> para desarrollo rapido y prototipos. Usa <strong>HSE</strong> cuando necesites precision (comunicacion USB, Ethernet, audio) o el maximo rendimiento.</p>
+</div>
+
+<h3>Diagrama del arbol de relojes</h3>
+<div class="diagram">
++-----------------------------------------------------------------------+
+|                    STM32N6 Clock Tree (simplificado)                  |
++-----------------------------------------------------------------------+
+|                                                                       |
+|   +-----------+         +-----------+                                |
+|   |   HSI     |         |    HSE    |                                |
+|   |  16 MHz   |         |  8-50 MHz |                                |
+|   | (interno) |         |(cristal)  |                                |
+|   +-----+-----+         +-----+-----+                                |
+|         |                     |                                      |
+|         +----------+----------+                                      |
+|                    |                                                 |
+|              +-----v-----+                                           |
+|              |   PLL     |    PLLM: division previa                  |
+|              |           |    PLLN: multiplicacion                   |
+|              |  f_out =  |    PLLP: division posterior               |
+|              | f_in*N/M/P|                                           |
+|              +-----+-----+                                           |
+|                    |                                                 |
+|              +-----v-----+    SYSCLK (hasta 400 MHz)                 |
+|              |  SYSCLK   |                                           |
+|              +-----+-----+                                           |
+|                    |                                                 |
+|              +-----v-----+    AHB Prescaler                          |
+|              |    HCLK    |    (1, 2, 4, 8, 16, 64, 128, 256, 512)  |
+|              |  (AHB Bus) |                                           |
+|              +-----+-----+                                           |
+|                    |                                                 |
+|         +----------+----------+                                      |
+|         |                     |                                      |
+|    +----v----+          +-----v-----+                                |
+|    |  APB1   |          |   APB2    |                                |
+|    |PCLK1    |          |  PCLK2    |                                |
+|    | max 200 |          |  max 200  |                                |
+|    |   MHz   |          |    MHz    |                                |
+|    +----+----+          +-----+-----+                                |
+|         |                     |                                      |
+|    +----v----+          +-----v-----+                                |
+|    |TIM2,3,4 |          |TIM1,15,16 |                                |
+|    |I2C1,2   |          | SPI1,4   |                                |
+|    |USART2,3 |          |USART1,6  |                                |
+|    | SPI2,3  |          | ADC1     |                                |
+|    +---------+          +----------+                                |
+|                                                                       |
++-----------------------------------------------------------------------+
+</div>
+
+<h3>Como configurar el Clock en STM32CubeIDE</h3>
+<ol>
+<li>Abre el archivo <code>.ioc</code> (nombre del proyecto + .ioc) en la raiz del proyecto.</li>
+<li>Se abrira la interfaz grafica de <strong>STM32CubeMX</strong>.</li>
+<li>Navega a la pestana <strong>"Clock Configuration"</strong>.</li>
+<li>En el diagrama grafico, selecciona la fuente de reloj (HSI o HSE) en el multiplexor de entrada.</li>
+<li>Configura los valores del PLL: PLLM, PLLN, PLLP.</li>
+<li>Los valores de los divisores AHB, APB1 y APB2 se ajustan automaticamente o manualmente segun tus necesidades.</li>
+<li>Presiona <strong>Ctrl+S</strong> para guardar. El codigo se regenera automaticamente.</li>
+</ol>
+
+<h3>Ejemplo de calculo de frecuencias</h3>
+<div class="highlight-box">
+<p><strong>Escenario:</strong> Queremos SYSCLK = 240 MHz usando HSI (16 MHz) como fuente.</p>
+</div>
+<table>
+<thead><tr><th>Parametro</th><th>Formula</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>PLLM (Division previa)</td><td>16 MHz / 4</td><td>4 MHz (VCO input)</td></tr>
+<tr><td>PLLN (Multiplicacion)</td><td>4 MHz * 120</td><td>480 MHz (VCO output)</td></tr>
+<tr><td>PLLP (Division SYSCLK)</td><td>480 MHz / 2</td><td>240 MHz (SYSCLK)</td></tr>
+<tr><td>AHB Prescaler</td><td>240 MHz / 1</td><td>240 MHz (HCLK)</td></tr>
+<tr><td>APB1 Prescaler</td><td>240 MHz / 2</td><td>120 MHz (PCLK1)</td></tr>
+<tr><td>APB2 Prescaler</td><td>240 MHz / 2</td><td>120 MHz (PCLK2)</td></tr>
+</tbody>
+</table>
+
+<pre><code>// Ejemplo de configuracion para 240 MHz desde HSI
+RCC_OscInitStruct.PLL.PLLM = 4;     // 16 / 4 = 4 MHz
+RCC_OscInitStruct.PLL.PLLN = 120;   // 4 * 120 = 480 MHz (VCO)
+RCC_OscInitStruct.PLL.PLLP = 2;     // 480 / 2 = 240 MHz (SYSCLK)
+
+RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;   // 240 MHz
+RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;     // 120 MHz
+RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;     // 120 MHz</code></pre>
+
+<h3>Flash Latency</h3>
+<p>A mayor frecuencia de CPU, se necesitan mas <strong>ciclos de espera</strong> para acceder a la memoria Flash. La relacion tipica para STM32N6:</p>
+<table>
+<thead><tr><th>Rango de HCLK</th><th>Flash Latency (WS)</th></tr></thead>
+<tbody>
+<tr><td>0 - 32 MHz</td><td>0 WS</td></tr>
+<tr><td>32 - 64 MHz</td><td>1 WS</td></tr>
+<tr><td>64 - 96 MHz</td><td>2 WS</td></tr>
+<tr><td>96 - 128 MHz</td><td>3 WS</td></tr>
+<tr><td>128 - 160 MHz</td><td>4 WS</td></tr>
+<tr><td>160 - 200 MHz</td><td>5 WS</td></tr>
+<tr><td>200 - 240 MHz</td><td>6 WS</td></tr>
+<tr><td>240 - 280 MHz</td><td>7 WS</td></tr>
+<tr><td>280 - 320 MHz</td><td>8 WS</td></tr>
+</tbody>
+</table>
+
+<div class="highlight-box">
+<p><strong>Consejo de rendimiento:</strong> Si tu aplicacion ejecuta codigo principalmente desde RAM (TCM), la Flash Latency tiene menos impacto. El TCM (Tightly Coupled Memory) del STM32N6 permite acceso en 0 ciclos de espera independientemente de la frecuencia.</p>
+</div>
+</div>
+
+<!-- LECCION 5: Configuracion GPIO entrada/salida -->
+<div class="card" id="leccion5">
+<h2>Leccion 5: Configuracion de GPIO &mdash; Entrada y Salida</h2>
+<p>Los <strong>GPIO</strong> (General Purpose Input/Output) son los pines de proposito general del microcontrolador. Pueden configurarse como entradas para leer sensores y botones, o como salidas para controlar LEDs, reles y otros actuadores. Dominar la configuracion GPIO es fundamental para cualquier proyecto embebido.</p>
+
+<h3>Estructura GPIO_InitTypeDef explicada campo por campo</h3>
+<pre><code>// Estructura de configuracion GPIO (definida en stm32n6xx_hal_gpio.h)
+typedef struct {
+    uint32_t Pin;        // Pin(es) a configurar: GPIO_PIN_0 ... GPIO_PIN_15
+    uint32_t Mode;       // Modo de funcionamiento (ver tabla abajo)
+    uint32_t Pull;       // Resistencia pull-up/pull-down
+    uint32_t Speed;      // Velocidad de conmutacion del pin
+    uint32_t Alternate;  // Funcion alternativa (AF) para perifericos
+} GPIO_InitTypeDef;</code></pre>
+
+<h3>Modos de operacion GPIO</h3>
+<table>
+<thead><tr><th>Modo (Mode)</th><th>Descripcion</th><th>Uso tipico</th></tr></thead>
+<tbody>
+<tr><td><code>GPIO_MODE_INPUT</code></td><td>Entrada digital pura. Lee nivel logico (0 o 1).</td><td>Botones, sensores digitales</td></tr>
+<tr><td><code>GPIO_MODE_OUTPUT_PP</code></td><td>Salida Push-Pull. Puede forzar HIGH o LOW activamente.</td><td>LEDs, control de reles</td></tr>
+<tr><td><code>GPIO_MODE_OUTPUT_OD</code></td><td>Salida Open-Drain. Solo fuerza LOW; HIGH es alta impedancia.</td><td>I2C, buses compartidos</td></tr>
+<tr><td><code>GPIO_MODE_AF_PP</code></td><td>Salida Push-Pull con funcion alternativa.</td><td>UART_TX, SPI_SCK, PWM</td></tr>
+<tr><td><code>GPIO_MODE_AF_OD</code></td><td>Salida Open-Drain con funcion alternativa.</td><td>I2C_SDA, I2C_SCL</td></tr>
+<tr><td><code>GPIO_MODE_ANALOG</code></td><td>Modo analogico. Desconecta el buffer digital.</td><td>Entradas ADC, DAC</td></tr>
+<tr><td><code>GPIO_MODE_IT_RISING</code></td><td>Interrupcion por flanco de subida.</td><td>Deteccion de eventos</td></tr>
+<tr><td><code>GPIO_MODE_IT_FALLING</code></td><td>Interrupcion por flanco de bajada.</td><td>Deteccion de eventos</td></tr>
+</tbody>
+</table>
+
+<h3>Resistencias Pull-Up y Pull-Down</h3>
+<table>
+<thead><tr><th>Configuracion (Pull)</th><th>Descripcion</th><th>Cuando usarla</th></tr></thead>
+<tbody>
+<tr><td><code>GPIO_NOPULL</code></td><td>Sin resistencia interna. El pin flota.</td><td>Salidas, senales con resistencia externa</td></tr>
+<tr><td><code>GPIO_PULLUP</code></td><td>Resistencia interna (~40k ohm) a VDD (3.3V).</td><td>Botones conectados a GND (estado alto por defecto)</td></tr>
+<tr><td><code>GPIO_PULLDOWN</code></td><td>Resistencia interna (~40k ohm) a GND.</td><td>Botones conectados a VDD (estado bajo por defecto)</td></tr>
+</tbody>
+</table>
+
+<h3>Ejemplo practico: Boton + LED</h3>
+<p>Este proyecto controla un LED con un boton: el LED se enciende mientras se presiona el boton. El boton esta conectado a <strong>PA0</strong> y el LED a <strong>PC13</strong>.</p>
+
+<div class="highlight-box">
+<p><strong>Conexion fisica tipica:</strong> Boton entre PA0 y GND (con pull-up interno). LED en PC13 (logica negativa: LOW = encendido).</p>
+</div>
+
+<pre><code>// ============================================================================
+// main.c - Boton en PA0 + LED en PC13 para STM32N6
+// ============================================================================
+
+#include "stm32n6xx_hal.h"
+
+// Definiciones para claridad del codigo
+#define BOTON_PIN    GPIO_PIN_0
+#define BOTON_PORT   GPIOA
+#define LED_PIN      GPIO_PIN_13
+#define LED_PORT     GPIOC
+
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+
+int main(void)
+{
+    HAL_Init();
+    SystemClock_Config();
+    MX_GPIO_Init();
+
+    while (1)
+    {
+        // Leer el estado del boton en PA0
+        // HAL_GPIO_ReadPin devuelve GPIO_PIN_SET (1) o GPIO_PIN_RESET (0)
+        GPIO_PinState boton_presionado = HAL_GPIO_ReadPin(BOTON_PORT, BOTON_PIN);
+
+        // El boton tiene pull-up: cuando NO se presiona -> HIGH (1)
+        //                           cuando se presiona  -> LOW  (0)
+        if (boton_presionado == GPIO_PIN_RESET)
+        {
+            // Boton presionado -> Encender LED (LOW activo)
+            HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET);
+        }
+        else
+        {
+            // Boton liberado -> Apagar LED
+            HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET);
+        }
+
+        // Pequeno retardo para eliminar rebote del boton (debouncing)
+        HAL_Delay(10);   // 10 ms es suficiente para la mayoria de botones
+    }
+}
+
+static void MX_GPIO_Init(void)
+{
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    // === Habilitar relojes de los puertos que usaremos ===
+    __HAL_RCC_GPIOA_CLK_ENABLE();   // Puerto A (boton)
+    __HAL_RCC_GPIOC_CLK_ENABLE();   // Puerto C (LED)
+
+    // === Configurar PA0 como entrada con pull-up ===
+    GPIO_InitStruct.Pin  = BOTON_PIN;              // Pin 0
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;        // Modo entrada
+    GPIO_InitStruct.Pull = GPIO_PULLUP;            // Pull-up interno
+    HAL_GPIO_Init(BOTON_PORT, &GPIO_InitStruct);   // Aplicar en GPIOA
+
+    // === Configurar PC13 como salida push-pull ===
+    GPIO_InitStruct.Pin   = LED_PIN;                // Pin 13
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;    // Salida push-pull
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;            // Sin pull
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;    // Velocidad baja
+    HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);      // Aplicar en GPIOC
+
+    // Estado inicial: LED apagado
+    HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET);
+}
+
+void SystemClock_Config(void)
+{
+    // Configuracion basica de reloj (HSI + PLL para 120 MHz)
+    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+    RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+    RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+    RCC_OscInitStruct.PLL.PLLM = 4;
+    RCC_OscInitStruct.PLL.PLLN = 60;
+    RCC_OscInitStruct.PLL.PLLP = 2;
+    HAL_RCC_OscConfig(&RCC_OscInitStruct);
+
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+                                | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+    HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
+}
+
+void Error_Handler(void)
+{
+    __disable_irq();
+    while (1) { }
+}</code></pre>
+
+<h3>Funciones HAL para GPIO resumidas</h3>
+<table>
+<thead><tr><th>Funcion</th><th>Descripcion</th></tr></thead>
+<tbody>
+<tr><td><code>HAL_GPIO_ReadPin(GPIOx, GPIO_Pin)</code></td><td>Lee el estado logico del pin (GPIO_PIN_SET o GPIO_PIN_RESET)</td></tr>
+<tr><td><code>HAL_GPIO_WritePin(GPIOx, GPIO_Pin, PinState)</code></td><td>Escribe un valor logico en el pin</td></tr>
+<tr><td><code>HAL_GPIO_TogglePin(GPIOx, GPIO_Pin)</code></td><td>Invierte el estado del pin</td></tr>
+<tr><td><code>HAL_GPIO_Init(GPIOx, GPIO_Init)</code></td><td>Configura el pin segun la estructura GPIO_InitTypeDef</td></tr>
+<tr><td><code>HAL_GPIO_DeInit(GPIOx, GPIO_Pin)</code></td><td>Restaura el pin a su estado de reset (entrada flotante)</td></tr>
+<tr><td><code>__HAL_RCC_GPIOx_CLK_ENABLE()</code></td><td>Habilita el reloj del puerto GPIOx (debe llamarse antes de init)</td></tr>
+</tbody>
+</table>
+
+<div class="highlight-box">
+<p><strong>Tip profesional:</strong> Siempre habilita el reloj del periferico <em>antes</em> de llamar a HAL_GPIO_Init(). Acceder a un periferico sin reloj habilitado genera un HardFault.</p>
+</div>
+</div>
+
+<!-- ============================================ -->
+<!-- QUIZZES INTERACTIVOS                         -->
+<!-- ============================================ -->
+
+<h2 class="section-title">Evaluacion de conocimientos</h2>
+<p class="section-subtitle">Responde las siguientes preguntas para verificar tu comprension del modulo.</p>
+
+<!-- QUIZ 1 -->
+<div class="quiz-card" id="quiz1" data-answered="false">
+<h3>Pregunta 1: Arquitectura del STM32N6</h3>
+<p style="margin-bottom:16px;color:var(--text-primary);">Que componente del STM32N6 se encarga de acelerar las inferencias de inteligencia artificial?</p>
+<button class="quiz-option" data-correct="false" onclick="checkAnswer(this,1)">A) Cortex-M55</button>
+<button class="quiz-option" data-correct="true"  onclick="checkAnswer(this,1)">B) Ethos-U55 NPU</button>
+<button class="quiz-option" data-correct="false" onclick="checkAnswer(this,1)">C) BusMatrix AHB</button>
+<button class="quiz-option" data-correct="false" onclick="checkAnswer(this,1)">D) Flash Memory Controller</button>
+<div class="quiz-feedback" id="feedback1">
+<strong>Correcto!</strong> El <strong>Ethos-U55</strong> es el Neural Processing Unit (NPU) integrado en el STM32N6. Es un coprocesador especializado que acelera operaciones de redes neuronales (hasta 512 MAC/ciclo), liberando al Cortex-M55 de esta carga computacional. El Cortex-M55 es la CPU principal que ejecuta el firmware, pero no es su funcion acelerar IA.
+</div>
+</div>
+
+<!-- QUIZ 2 -->
+<div class="quiz-card" id="quiz2" data-answered="false">
+<h3>Pregunta 2: Fuentes de reloj</h3>
+<p style="margin-bottom:16px;color:var(--text-primary);">Cual es la frecuencia tipica del oscilador HSI (High Speed Internal) del STM32N6?</p>
+<button class="quiz-option" data-correct="false" onclick="checkAnswer(this,2)">A) 8 MHz</button>
+<button class="quiz-option" data-correct="true"  onclick="checkAnswer(this,2)">B) 16 MHz</button>
+<button class="quiz-option" data-correct="false" onclick="checkAnswer(this,2)">C) 25 MHz</button>
+<button class="quiz-option" data-correct="false" onclick="checkAnswer(this,2)">D) 48 MHz</button>
+<div class="quiz-feedback" id="feedback2">
+<strong>Correcto!</strong> El <strong>HSI</strong> (High Speed Internal) del STM32N6 oscila a <strong>16 MHz</strong> por defecto. Es un oscilador RC interno que siempre esta disponible despues del reset, lo que permite iniciar el microcontrolador sin componentes externos. Si se necesita mayor precision, se puede usar un cristal HSE externo o calibrar el HSI via software.
+</div>
+</div>
+
+<!-- QUIZ 3 -->
+<div class="quiz-card" id="quiz3" data-answered="false">
+<h3>Pregunta 3: Funciones HAL para GPIO</h3>
+<p style="margin-bottom:16px;color:var(--text-primary);">Que funcion HAL se utiliza para invertir (toggle) el estado logico de un pin GPIO?</p>
+<button class="quiz-option" data-correct="false" onclick="checkAnswer(this,3)">A) HAL_GPIO_WritePin()</button>
+<button class="quiz-option" data-correct="false" onclick="checkAnswer(this,3)">B) HAL_GPIO_ReadPin()</button>
+<button class="quiz-option" data-correct="true"  onclick="checkAnswer(this,3)">C) HAL_GPIO_TogglePin()</button>
+<button class="quiz-option" data-correct="false" onclick="checkAnswer(this,3)">D) HAL_GPIO_Init()</button>
+<div class="quiz-feedback" id="feedback3">
+<strong>Correcto!</strong> <strong>HAL_GPIO_TogglePin()</strong> invierte el estado actual del pin: si esta en HIGH pasa a LOW, y viceversa. Es la funcion ideal para hacer parpadear un LED sin necesidad de llevar un estado manual. HAL_GPIO_WritePin() requiere especificar el estado deseado, HAL_GPIO_ReadPin() solo lee, y HAL_GPIO_Init() configura el pin pero no cambia su estado logico.
+</div>
+</div>
+
+<!-- ============================================ -->
+<!-- RESUMEN FINAL                                -->
+<!-- ============================================ -->
+
+<h2 class="section-title">Resumen del modulo</h2>
+<p class="section-subtitle">Has completado los 5 temas fundamentales del STM32N6. Revisa tu progreso.</p>
+
+<div class="card" id="resumen">
+<h2>Conceptos aprendidos en este modulo</h2>
+
+<div class="checklist-item" id="check1">
+<span class="check-icon" id="icon1">&#9675;</span>
+<span>Arquitectura heterogenea Cortex-M55 + Ethos-U55 NPU</span>
+</div>
+<div class="checklist-item" id="check2">
+<span class="check-icon" id="icon2">&#9675;</span>
+<span>Instalacion y configuracion de STM32CubeIDE</span>
+</div>
+<div class="checklist-item" id="check3">
+<span class="check-icon" id="icon3">&#9675;</span>
+<span>Primer proyecto HAL: Blink LED con GPIO y reloj de sistema</span>
+</div>
+<div class="checklist-item" id="check4">
+<span class="check-icon" id="icon4">&#9675;</span>
+<span>Arbol de relojes: HSI, HSE, PLL y configuracion de frecuencias</span>
+</div>
+<div class="checklist-item" id="check5">
+<span class="check-icon" id="icon5">&#9675;</span>
+<span>Configuracion completa de GPIO: entrada, salida, pull-up/down</span>
+</div>
+
+<button class="complete-btn" id="completeBtn" onclick="markCompleted()">Marcar como completado</button>
+<div class="completion-msg" id="completionMsg">
+<strong>Modulo completado!</strong> Tu progreso ha sido guardado. Puedes continuar con el Modulo 2.
+</div>
+</div>
+
+<footer style="text-align:center;padding:30px 0;color:var(--text-secondary);font-size:.85rem;border-top:1px solid var(--border);margin-top:20px;">
+<p>STM32N6 Industrial Academy &mdash; Modulo 1: Fundamentos</p>
+<p style="margin-top:4px;">Generado para formacion tecnica industrial embebida</p>
+</footer>
+
+</div><!-- /.container -->
+
+<!-- ============================================ -->
+<!-- JAVASCRIPT                                   -->
+<!-- ============================================ -->
+<script>
+// ============================================================================
+// STM32N6 Industrial Academy - Modulo 1: Logica interactiva
+// ============================================================================
+
+(function() {
+    'use strict';
+
+    // --- Estado del modulo ---
+    const MODULE_KEY = 'stm32n6_mod1_completed';
+    const QUIZ_KEYS = ['stm32n6_mod1_quiz1', 'stm32n6_mod1_quiz2', 'stm32n6_mod1_quiz3'];
+
+    // =========================================================================
+    // QUIZZES
+    // =========================================================================
+
+    /**
+     * Verifica la respuesta seleccionada en un quiz.
+     * @param {HTMLButtonElement} btn - Boton de opcion seleccionado
+     * @param {number} quizNum - Numero de quiz (1, 2 o 3)
+     */
+    window.checkAnswer = function(btn, quizNum) {
+        const quizCard = document.getElementById('quiz' + quizNum);
+
+        // Evitar respuestas multiples
+        if (quizCard.dataset.answered === 'true') return;
+        quizCard.dataset.answered = 'true';
+
+        // Guardar en localStorage que este quiz fue respondido
+        localStorage.setItem(QUIZ_KEYS[quizNum - 1], 'answered');
+
+        const isCorrect = btn.dataset.correct === 'true';
+        const feedback = document.getElementById('feedback' + quizNum);
+
+        // Desactivar todos los botones del quiz
+        const allOptions = quizCard.querySelectorAll('.quiz-option');
+        allOptions.forEach(function(opt) {
+            opt.disabled = true;
+            if (opt.dataset.correct === 'true') {
+                // Siempre marcar la correcta en verde
+                opt.classList.add('correct');
+            } else if (opt === btn && !isCorrect) {
+                // Marcar solo la seleccionada del usuario en rojo si estaba mal
+                opt.classList.add('wrong');
+            }
+        });
+
+        // Mostrar feedback
+        feedback.classList.add('show');
+        feedback.classList.add(isCorrect ? 'correct' : 'wrong');
+        if (!isCorrect) {
+            feedback.innerHTML = '<strong>Incorrecto.</strong> ' + feedback.innerHTML.replace(/<strong>.*?<\/strong>\s*/, '');
+        }
+
+        // Actualizar barra de progreso
+        updateProgressBar();
+    };
+
+    // =========================================================================
+    // PROGRESO Y COMPLETADO
+    // =========================================================================
+
+    /**
+     * Actualiza la barra de progreso segun quizzes respondidos y estado de completado.
+     */
+    function updateProgressBar() {
+        let answeredQuizzes = 0;
+        QUIZ_KEYS.forEach(function(key) {
+            if (localStorage.getItem(key) === 'answered') answeredQuizzes++;
+        });
+
+        // 3 quizzes = 60% del progreso, completado = 40%
+        let percent = (answeredQuizzes / 3) * 60;
+
+        if (localStorage.getItem(MODULE_KEY) === 'true') {
+            percent = 100;
+            markChecklistComplete();
+            disableCompleteButton();
+        }
+
+        document.getElementById('progress-fill').style.width = percent + '%';
+        document.getElementById('progress-text').textContent = Math.round(percent) + '%';
+    }
+
+    /**
+     * Marca el modulo como completado y guarda en localStorage.
+     */
+    window.markCompleted = function() {
+        localStorage.setItem(MODULE_KEY, 'true');
+        markChecklistComplete();
+        disableCompleteButton();
+        showCompletionMessage();
+        updateProgressBar();
+    };
+
+    function markChecklistComplete() {
+        for (let i = 1; i <= 5; i++) {
+            const icon = document.getElementById('icon' + i);
+            if (icon) {
+                icon.classList.add('checked');
+                icon.innerHTML = '&#10003;';  // Checkmark
+            }
+        }
+    }
+
+    function disableCompleteButton() {
+        const btn = document.getElementById('completeBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Modulo completado';
+        }
+    }
+
+    function showCompletionMessage() {
+        const msg = document.getElementById('completionMsg');
+        if (msg) msg.classList.add('show');
+    }
+
+    // =========================================================================
+    // INICIALIZACION
+    // =========================================================================
+
+    function init() {
+        // Restaurar estado de quizzes desde localStorage
+        QUIZ_KEYS.forEach(function(key, idx) {
+            if (localStorage.getItem(key) === 'answered') {
+                const quizNum = idx + 1;
+                const quizCard = document.getElementById('quiz' + quizNum);
+                const feedback = document.getElementById('feedback' + quizNum);
+                const allOptions = quizCard.querySelectorAll('.quiz-option');
+
+                quizCard.dataset.answered = 'true';
+
+                // Restaurar colores: correcta en verde
+                allOptions.forEach(function(opt) {
+                    opt.disabled = true;
+                    if (opt.dataset.correct === 'true') {
+                        opt.classList.add('correct');
+                    }
+                });
+
+                // Mostrar feedback (sin marcar incorrecto, ya que no sabemos que eligio)
+                feedback.classList.add('show');
+                feedback.classList.add('correct');
+            }
+        });
+
+        // Actualizar barra de progreso
+        updateProgressBar();
+    }
+
+    // Ejecutar inicializacion cuando el DOM este listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
+</script>
+</body>
+</html>

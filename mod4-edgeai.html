@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 4: Edge AI | STM32N6 Industrial Academy</title>
+<style>
+  /* ============================================
+     RESET & BASE
+     ============================================ */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e5e7eb;
+    line-height: 1.6;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+  /* ============================================
+     BANNER DE ESTADO INDUSTRIAL
+     ============================================ */
+  .status-banner {
+    position: sticky; top: 0; z-index: 1000;
+    padding: 12px 20px; text-align: center; font-weight: 600; font-size: 0.95rem;
+    border-bottom: 2px solid #2d3142; transition: all 0.4s ease;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .status-banner.normal { background: linear-gradient(90deg, #064e3b, #10b981); color: #fff; }
+  .status-banner.alerta { background: linear-gradient(90deg, #78350f, #f59e0b); color: #fff; }
+  .status-banner.critico { background: linear-gradient(90deg, #7f1d1d, #ef4444); color: #fff; animation: pulseCritico 1.5s ease-in-out infinite; }
+  @keyframes pulseCritico {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50% { opacity: 0.85; box-shadow: 0 0 20px 4px rgba(239,68,68,0.6); }
+  }
+
+  /* ============================================
+     HEADER
+     ============================================ */
+  header { text-align: center; padding: 40px 0 20px; }
+  header h1 { font-size: 2rem; margin-bottom: 8px; color: #f59e0b; }
+  header p { color: #9ca3af; margin-bottom: 16px; }
+  .badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+  }
+  .badge-experto { background: rgba(245,158,11,0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+  .badge-ia { background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid #3b82f6; }
+  .badge-npu { background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid #10b981; }
+
+  /* ============================================
+     BARRA DE PROGRESO
+     ============================================ */
+  .progress-container {
+    background: #1a1d29; border-radius: 12px; padding: 16px 20px;
+    border: 1px solid #2d3142; margin-bottom: 24px;
+  }
+  .progress-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: #9ca3af; margin-bottom: 8px; }
+  .progress-bar { width: 100%; height: 10px; background: #0f1117; border-radius: 5px; overflow: hidden; }
+  .progress-fill {
+    height: 100%; width: 100%; background: linear-gradient(90deg, #f59e0b, #10b981);
+    border-radius: 5px; transition: width 1s ease;
+  }
+
+  /* ============================================
+     CARDS GENERALES
+     ============================================ */
+  .card {
+    background: #1a1d29; border-radius: 12px; padding: 24px;
+    margin-bottom: 24px; border: 1px solid #2d3142;
+    transition: box-shadow 0.3s ease;
+  }
+  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .card-npu {
+    border: 1px solid rgba(59,130,246,0.3);
+    box-shadow: 0 0 15px rgba(59,130,246,0.08);
+  }
+  .card-npu:hover { box-shadow: 0 0 25px rgba(59,130,246,0.15); }
+  .card h2 { color: #f59e0b; font-size: 1.35rem; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .card h3 { color: #3b82f6; font-size: 1.1rem; margin: 20px 0 10px; }
+  .card p { color: #e5e7eb; margin-bottom: 12px; font-size: 0.95rem; }
+  .card ul, .card ol { margin-left: 20px; margin-bottom: 16px; color: #e5e7eb; }
+  .card li { margin-bottom: 8px; }
+  .lesson-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; background: #f59e0b; color: #0f1117;
+    border-radius: 50%; font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* ============================================
+     CODE BLOCKS
+     ============================================ */
+  pre {
+    background: #0d0f17; border-left: 4px solid #f59e0b;
+    border-radius: 0 8px 8px 0; padding: 16px;
+    overflow-x: auto; font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.82rem; line-height: 1.5; margin: 12px 0;
+    position: relative;
+  }
+  code { font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.82rem; }
+  .code-keyword { color: #c678dd; }
+  .code-string { color: #98c379; }
+  .code-comment { color: #5c6370; font-style: italic; }
+  .code-function { color: #61afef; }
+  .code-number { color: #d19a66; }
+  .copy-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: #2d3142; color: #9ca3af; border: none;
+    padding: 4px 10px; border-radius: 6px; cursor: pointer;
+    font-size: 0.7rem; font-family: 'Segoe UI', sans-serif;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { background: #f59e0b; color: #0f1117; }
+
+  /* ============================================
+     TABLAS
+     ============================================ */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.88rem; }
+  th { background: #0d0f17; color: #f59e0b; padding: 10px 12px; text-align: left; border-bottom: 2px solid #2d3142; }
+  td { padding: 8px 12px; border-bottom: 1px solid #2d3142; }
+  tr:hover td { background: rgba(245,158,11,0.05); }
+  tr.row-normal { background: rgba(16,185,129,0.08); }
+  tr.row-anomaly { background: rgba(239,68,68,0.08); }
+
+  /* ============================================
+     BADGES DE ESTADO (SEMAFORO)
+     ============================================ */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+  }
+  .status-normal { background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid #10b981; }
+  .status-alerta { background: rgba(245,158,11,0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+  .status-critico { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid #ef4444; }
+
+  /* ============================================
+     GAUGE CIRCULAR
+     ============================================ */
+  .gauge-container { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 16px 0; }
+  .gauge-svg { width: 180px; height: 180px; }
+  .gauge-bg { fill: none; stroke: #2d3142; stroke-width: 12; }
+  .gauge-fill {
+    fill: none; stroke-width: 12; stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease, stroke 0.5s ease;
+    transform: rotate(-90deg); transform-origin: 50% 50%;
+  }
+  .gauge-text { fill: #e5e7eb; font-size: 28px; font-weight: 700; text-anchor: middle; }
+  .gauge-label { fill: #9ca3af; font-size: 12px; text-anchor: middle; }
+
+  /* ============================================
+     GRAFICO COMPARATIVO BARRAS
+     ============================================ */
+  .chart-container { margin: 20px 0; }
+  .bar-row { display: flex; align-items: center; margin-bottom: 16px; gap: 12px; }
+  .bar-label { width: 120px; font-size: 0.85rem; color: #9ca3af; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 32px; background: #0d0f17; border-radius: 8px; overflow: hidden; position: relative; }
+  .bar-fill {
+    height: 100%; border-radius: 8px; display: flex; align-items: center; padding-right: 12px;
+    justify-content: flex-end; font-size: 0.8rem; font-weight: 600; color: #fff;
+    transition: width 1.5s ease; width: 0;
+  }
+  .bar-cpu { background: linear-gradient(90deg, #92400e, #f59e0b); }
+  .bar-npu { background: linear-gradient(90deg, #065f46, #10b981); }
+  .speedup-text { text-align: center; font-size: 1.5rem; font-weight: 700; color: #10b981; margin: 16px 0; }
+  .speedup-text span { color: #f59e0b; }
+
+  /* ============================================
+     SIMULADOR
+     ============================================ */
+  .simulator-btn {
+    display: block; width: 100%; padding: 16px;
+    background: linear-gradient(90deg, #92400e, #f59e0b); color: #fff;
+    border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700;
+    cursor: pointer; transition: all 0.3s; margin: 16px 0;
+  }
+  .simulator-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245,158,11,0.3); }
+  .simulator-btn:active { transform: translateY(0); }
+  .sim-result { background: #0d0f17; border-radius: 10px; padding: 16px; margin-top: 16px; border: 1px solid #2d3142; }
+  .sim-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1a1d29; }
+  .sim-row:last-child { border-bottom: none; }
+  .sim-label { color: #9ca3af; font-size: 0.85rem; }
+  .sim-value { font-weight: 600; font-size: 0.9rem; }
+  .axes-values { display: flex; gap: 12px; justify-content: center; margin: 12px 0; }
+  .axis-box { background: #0d0f17; border: 1px solid #2d3142; border-radius: 8px; padding: 10px 16px; text-align: center; }
+  .axis-name { font-size: 0.75rem; color: #9ca3af; }
+  .axis-val { font-size: 1.1rem; font-weight: 700; color: #3b82f6; }
+
+  /* ============================================
+     HISTORIAL
+     ============================================ */
+  .history-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .history-item {
+    display: flex; align-items: center; gap: 10px;
+    background: #0d0f17; border-radius: 8px; padding: 8px 12px;
+    border: 1px solid #2d3142; font-size: 0.8rem;
+  }
+  .history-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .history-dot.normal { background: #10b981; }
+  .history-dot.anomaly { background: #ef4444; }
+
+  /* ============================================
+     MODAL WOKWI
+     ============================================ */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-content {
+    background: #1a1d29; border-radius: 16px; border: 1px solid #2d3142;
+    width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 24px;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-header h3 { color: #f59e0b; }
+  .modal-close { background: #2d3142; color: #e5e7eb; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; }
+  .modal-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .modal-tab {
+    padding: 8px 16px; background: #0d0f17; color: #9ca3af; border: 1px solid #2d3142;
+    border-radius: 8px; cursor: pointer; font-size: 0.85rem;
+  }
+  .modal-tab.active { background: #f59e0b; color: #0f1117; border-color: #f59e0b; font-weight: 600; }
+  .modal-tab-content { display: none; }
+  .modal-tab-content.active { display: block; }
+  .export-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; background: #3b82f6; color: #fff;
+    border: none; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .export-btn:hover { background: #2563eb; }
+
+  /* ============================================
+     DIAGRAMA ASCII
+     ============================================ */
+  .diagram-ascii {
+    background: #0d0f17; border: 1px solid #2d3142; border-radius: 10px;
+    padding: 16px; font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.78rem; line-height: 1.6; color: #e5e7eb; overflow-x: auto;
+  }
+  .diagram-ascii .dia-cpu { color: #f59e0b; }
+  .diagram-ascii .dia-npu { color: #3b82f6; font-weight: 700; }
+  .diagram-ascii .dia-mem { color: #10b981; }
+  .diagram-ascii .dia-bus { color: #9ca3af; }
+
+  /* ============================================
+     PASOS FLUJO
+     ============================================ */
+  .step-flow { display: flex; flex-direction: column; gap: 12px; }
+  .step-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: #0d0f17; border-radius: 10px; padding: 14px 16px;
+    border: 1px solid #2d3142;
+  }
+  .step-num {
+    width: 32px; height: 32px; background: #f59e0b; color: #0f1117;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+  }
+  .step-text { flex: 1; }
+  .step-title { font-weight: 600; color: #f59e0b; font-size: 0.9rem; }
+  .step-desc { color: #9ca3af; font-size: 0.85rem; margin-top: 2px; }
+
+  /* ============================================
+     ANIMACIONES
+     ============================================ */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.5s ease forwards; }
+
+  /* ============================================
+     FOOTER
+     ============================================ */
+  footer { text-align: center; padding: 30px 0; color: #5c6370; font-size: 0.8rem; border-top: 1px solid #2d3142; margin-top: 20px; }
+
+  /* ============================================
+     RESPONSIVE
+     ============================================ */
+  @media (max-width: 600px) {
+    .bar-label { width: 80px; font-size: 0.75rem; }
+    .axes-values { flex-direction: column; }
+    .gauge-svg { width: 140px; height: 140px; }
+    header h1 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     BANNER DE ESTADO INDUSTRIAL
+     ============================================ -->
+<div id="statusBanner" class="status-banner normal">
+  <span id="statusIcon">✅</span>
+  <span id="statusText">ESTADO DE FÁBRICA: NORMAL — Última inferencia: Normal (94% confianza)</span>
+</div>
+
+<div class="container">
+
+<!-- ============================================
+     HEADER
+     ============================================ -->
+<header>
+  <h1>⚡ Módulo 4: Edge AI con Ethos-U55</h1>
+  <p>STM32N6 Industrial Academy — Inteligencia Artificial en el Edge con Aceleración por NPU</p>
+  <div class="badges">
+    <span class="badge badge-experto">🔧 Nivel: Experto</span>
+    <span class="badge badge-ia">🧠 Inteligencia Artificial</span>
+    <span class="badge badge-npu">⚡ Ethos-U55 NPU</span>
+  </div>
+</header>
+
+<!-- ============================================
+     BARRA DE PROGRESO
+     ============================================ -->
+<div class="progress-container">
+  <div class="progress-label">
+    <span>Progreso del módulo</span>
+    <span>4 / 4 lecciones</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill"></div></div>
+</div>
+
+<!-- ============================================
+     LECCIÓN 1 — INTRODUCCIÓN A LA NPU ETHOS-U55
+     ============================================ -->
+<div class="card card-npu">
+  <h2><span class="lesson-num">1</span> Introducción a la NPU Ethos-U55</h2>
+
+  <h3>¿Qué es una NPU?</h3>
+  <p>Una <strong>Unidad de Procesamiento Neural (NPU)</strong> es un procesador especializado diseñado específicamente para acelerar las operaciones de redes neuronales artificiales. A diferencia de una CPU de propósito general que ejecuta instrucciones secuenciales, una NPU está optimizada para el paralelismo masivo requerido por la inferencia de modelos de deep learning.</p>
+
+  <table>
+    <tr><th>Característica</th><th>CPU (Cortex-M55)</th><th>NPU (Ethos-U55)</th></tr>
+    <tr><td>Propósito</td><td>Propósito general, secuencial</td><td>Aceleración de redes neuronales</td></tr>
+    <tr><td>Arquitectura</td><td>Pipeline de instrucciones</td><td>Array de multiplicadores MAC</td></tr>
+    <tr><td>Operaciones paralelas</td><td>Limited (SIMD)</td><td>512 GOPS paralelos</td></tr>
+    <tr><td>Eficiencia energética</td><td>~18 mJ/inferencia</td><td>~8 mJ/inferencia</td></tr>
+    <tr><td>Latencia típica</td><td>2.5 ms</td><td>0.3 ms</td></tr>
+  </table>
+
+  <h3>Ethos-U55: microNPU de ARM</h3>
+  <p>La <strong>Ethos-U55</strong> es una microNPU diseñada por ARM específicamente para microcontroladores. Integrada en la familia STM32N6, ofrece:</p>
+  <ul>
+    <li>Hasta <strong>512 GOPS</strong> de rendimiento de inferencia</li>
+    <li>Soporte nativo para cuantización <strong>INT8</strong></li>
+    <li>Interfaz directa con Cortex-M55 a través del bus AXI</li>
+    <li>Memoria SRAM compartida para tensores intermedios</li>
+    <li>Consumo ultra-bajo: ideal para aplicaciones de batería</li>
+  </ul>
+
+  <h3>Ventajas de la inferencia en el Edge</h3>
+  <ul>
+    <li><strong>Latencia mínima:</strong> respuesta en menos de 1ms, sin dependencia de red</li>
+    <li><strong>Privacidad de datos:</strong> los datos sensibles nunca salen del dispositivo</li>
+    <li><strong>Sin dependencia de cloud:</strong> operación autónoma offline</li>
+    <li><strong>Consumo optimizado:</strong> la NPU consume menos energía que la CPU para inferencia</li>
+    <li><strong>Seguridad:</strong> menor superficie de ataque al no requerir conectividad</li>
+  </ul>
+
+  <h3>Diagrama de bloques: CPU ↔ NPU ↔ Memoria</h3>
+  <div class="diagram-ascii">
+<span class="dia-cpu">┌─────────────────┐</span>         <span class="dia-npu">┌─────────────────┐</span>         <span class="dia-mem">┌─────────────────┐</span>
+<span class="dia-cpu">│  Cortex-M55     │</span>◄───────►<span class="dia-npu">│  Ethos-U55      │</span>◄───────►<span class="dia-mem">│  SRAM 4MB       │</span>
+<span class="dia-cpu">│  CPU Principal  │</span>  <span class="dia-bus">AXI</span>   <span class="dia-npu">│  microNPU       │</span>  <span class="dia-bus">AXI</span>   <span class="dia-mem">│  Tensores/      │</span>
+<span class="dia-cpu">│  @ 400 MHz      │</span>         <span class="dia-npu">│  512 GOPS       │</span>         <span class="dia-mem">│  Pesos          │</span>
+<span class="dia-cpu">└─────────────────┘</span>         <span class="dia-npu">└─────────────────┘</span>         <span class="dia-mem">└─────────────────┘</span>
+         ▲                                                      │
+         │                                                      │
+         └────────────────── <span class="dia-bus">Bus AXI Matrix</span> ◄──────────────────┘
+                                    │
+                           <span class="dia-mem">┌─────────────────┐</span>
+                           <span class="dia-mem">│  Flash/SDRAM    │</span>
+                           <span class="dia-mem">│  Modelo .tflite │</span>
+                           <span class="dia-mem">└─────────────────┘</span>
+  </div>
+
+  <h3>Tabla comparativa: CPU vs NPU en inferencia</h3>
+  <table>
+    <tr><th>Métrica</th><th>CPU Cortex-M55</th><th>NPU Ethos-U55</th><th>Mejora</th></tr>
+    <tr><td>Tiempo de inferencia</td><td>2.5 ms</td><td>0.3 ms</td><td><strong>8.3x</strong> más rápido</td></tr>
+    <tr><td>Consumo energético</td><td>45 mJ</td><td>8 mJ</td><td><strong>5.6x</strong> más eficiente</td></tr>
+    <tr><td>Precisión (INT8)</td><td>94.2%</td><td>94.2%</td><td>Idéntica</td></tr>
+    <tr><td>Uso de CPU durante inferencia</td><td>100%</td><td>~5%</td><td>CPU libre</td></tr>
+  </table>
+</div>
+
+<!-- ============================================
+     LECCIÓN 2 — FLUJO STM32Cube.AI
+     ============================================ -->
+<div class="card">
+  <h2><span class="lesson-num">2</span> Flujo de Trabajo STM32Cube.AI</h2>
+  <p>STM32Cube.AI es el toolkit oficial de ST para convertir modelos de redes neuronales pre-entrenados en código C optimizado que puede ejecutarse en microcontrolores STM32. El flujo completo consta de 8 pasos:</p>
+
+  <div class="step-flow">
+    <div class="step-item">
+      <span class="step-num">1</span>
+      <div class="step-text">
+        <span class="step-title">Entrenar modelo en Python</span>
+        <div class="step-desc">Usar TensorFlow/Keras para entrenar el modelo con tus datos. Emplear un modelo "tiny" (pocas capas, pocos parámetros) para asegurar que cabe en el MCU.</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">2</span>
+      <div class="step-text">
+        <span class="step-title">Exportar a .tflite (cuantización INT8)</span>
+        <div class="step-desc">Convertir el modelo a TensorFlow Lite con cuantización INT8. Esto reduce el tamaño del modelo ~4x y acelera la inferencia en hardware de edge.</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">3</span>
+      <div class="step-text">
+        <span class="step-title">Abrir STM32Cube.AI en STM32CubeIDE</span>
+        <div class="step-desc">Iniciar STM32CubeIDE, abrir el proyecto target, y acceder al panel "X-CUBE-AI" desde la configuración del proyecto (.ioc).</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">4</span>
+      <div class="step-text">
+        <span class="step-title">Seleccionar STM32N6 como target</span>
+        <div class="step-desc">Configurar el microcontrolador objetivo (STM32N6) para que STM32Cube.AI genere código optimizado para su arquitectura específica.</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">5</span>
+      <div class="step-text">
+        <span class="step-title">Importar modelo .tflite</span>
+        <div class="step-desc">Cargar el archivo <code>vibration_model.tflite</code> generado. El wizard analizará automáticamente la arquitectura del modelo.</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">6</span>
+      <div class="step-text">
+        <span class="step-title">Analizar y validar el modelo</span>
+        <div class="step-desc">STM32Cube.AI estima el uso de RAM, Flash, y tiempo de inferencia. Se puede validar con datos de test para verificar que la precisión se mantiene tras la cuantización.</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">7</span>
+      <div class="step-text">
+        <span class="step-title">Generar código C optimizado</span>
+        <div class="step-desc">El tool genera automáticamente: <code>network.c</code>, <code>network_data.c</code>, y archivos de cabecera con el runtime de X-CUBE-AI.</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <span class="step-num">8</span>
+      <div class="step-text">
+        <span class="step-title">Integrar en proyecto HAL</span>
+        <div class="step-desc">Incluir los archivos generados en el proyecto, implementar la lectura de sensores, llamar a <code>aiRun()</code> en el loop principal, y manejar las salidas.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Código Python: Entrenamiento del modelo de vibración</h3>
+  <pre id="pythonCode"><button class="copy-btn" onclick="copyCode('pythonCode')">Copiar</button><code><span class="code-keyword">import</span> tensorflow <span class="code-keyword">as</span> tf
+<span class="code-keyword">import</span> numpy <span class="code-keyword">as</span> np
+
+<span class="code-comment"># ============================================</span>
+<span class="code-comment"># 1. Generar dataset sintético de vibración</span>
+<span class="code-comment"># ============================================</span>
+np.random.seed(<span class="code-number">42</span>)
+<span class="code-comment"># 500 muestras normales: baja vibración en 3 ejes</span>
+normal = np.random.normal(<span class="code-number">0</span>, <span class="code-number">0.5</span>, (<span class="code-number">500</span>, <span class="code-number">3</span>))
+<span class="code-comment"># 500 muestras anómalas: alta vibración en 3 ejes</span>
+anomaly = np.random.normal(<span class="code-number">2</span>, <span class="code-number">1.0</span>, (<span class="code-number">500</span>, <span class="code-number">3</span>))
+<span class="code-comment"># Combinar dataset</span>
+X = np.vstack([normal, anomaly])
+y = np.array([<span class="code-number">0</span>]*<span class="code-number">500</span> + [<span class="code-number">1</span>]*<span class="code-number">500</span>)  <span class="code-comment"># 0=normal, 1=anomalía</span>
+
+<span class="code-comment"># ============================================</span>
+<span class="code-comment"># 2. Definir modelo tinyML (solo 3 capas)</span>
+<span class="code-comment"># ============================================</span>
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(<span class="code-number">16</span>, activation=<span class="code-string">'relu'</span>, input_shape=(<span class="code-number">3</span>,)),
+    tf.keras.layers.Dense(<span class="code-number">8</span>, activation=<span class="code-string">'relu'</span>),
+    tf.keras.layers.Dense(<span class="code-number">1</span>, activation=<span class="code-string">'sigmoid'</span>)
+])
+
+<span class="code-comment"># ============================================</span>
+<span class="code-comment"># 3. Compilar y entrenar</span>
+<span class="code-comment"># ============================================</span>
+model.<span class="code-function">compile</span>(
+    optimizer=<span class="code-string">'adam'</span>,
+    loss=<span class="code-string">'binary_crossentropy'</span>,
+    metrics=[<span class="code-string">'accuracy'</span>]
+)
+model.<span class="code-function">fit</span>(X, y, epochs=<span class="code-number">20</span>, batch_size=<span class="code-number">32</span>, validation_split=<span class="code-number">0.2</span>)
+
+<span class="code-comment"># ============================================</span>
+<span class="code-comment"># 4. Cuantización INT8 para Edge AI</span>
+<span class="code-comment"># ============================================</span>
+converter = tf.lite.TFLiteConverter.<span class="code-function">from_keras_model</span>(model)
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+tflite_model = converter.<span class="code-function">convert</span>()
+<span class="code-function">open</span>(<span class="code-string">"vibration_model.tflite"</span>, <span class="code-string">"wb"</span>).<span class="code-function">write</span>(tflite_model)
+<span class="code-function">print</span>(<span class="code-string">"Modelo exportado: vibration_model.tflite"</span>)</code></pre>
+</div>
+
+<!-- ============================================
+     LECCIÓN 3 — SMART FACTORY GUARDIAN
+     ============================================ -->
+<div class="card card-npu">
+  <h2><span class="lesson-num">3</span> Proyecto "Smart Factory Guardian"</h2>
+  <p>Este es el proyecto principal del módulo: un sistema de <strong>detección de vibración anómala</strong> que utiliza un acelerómetro de 3 ejes y la NPU Ethos-U55 para clasificar el estado de una máquina industrial en tiempo real.</p>
+
+  <h3>Dataset de vibración (20 muestras)</h3>
+  <p>El dataset contiene lecturas de 3 ejes del acelerómetro (ax, ay, az) y una etiqueta: <strong>0=NORMAL</strong> (baja vibración) o <strong>1=ANOMALÍA</strong> (alta vibración).</p>
+
+  <pre id="csvCode"><button class="copy-btn" onclick="copyCode('csvCode')">Copiar Dataset</button><code>ax,ay,az,label
+0.12,0.05,-0.98,0
+0.45,0.23,-0.87,0
+1.89,2.34,-0.45,1
+3.21,2.89,0.12,1
+0.08,0.03,-1.02,0
+0.67,0.45,-0.76,0
+2.45,1.98,-0.23,1
+3.89,3.12,0.56,1
+0.23,0.11,-0.95,0
+0.34,0.19,-0.88,0
+4.12,3.45,0.78,1
+2.78,2.23,-0.34,1
+0.15,0.07,-0.99,0
+0.56,0.31,-0.82,0
+3.45,2.87,0.45,1
+1.23,1.56,-0.67,1
+0.09,0.04,-1.01,0
+0.78,0.52,-0.73,0
+2.98,2.45,-0.12,1
+4.56,3.78,0.89,1</code></pre>
+
+  <h3>Tabla de muestras</h3>
+  <div style="overflow-x:auto;">
+    <table id="datasetTable">
+      <tr><th>#</th><th>ax</th><th>ay</th><th>az</th><th>Label</th><th>Clase</th></tr>
+      <!-- Generado por JS -->
+    </table>
+  </div>
+
+  <h3>Código de inferencia en C (STM32Cube.AI)</h3>
+  <pre id="cCode"><button class="copy-btn" onclick="copyCode('cCode')">Copiar</button><code><span class="code-comment">/* ============================================</span>
+<span class="code-comment"> * Smart Factory Guardian - Inferencia Edge AI</span>
+<span class="code-comment"> * STM32N6 + Ethos-U55 + Acelerómetro 3 ejes</span>
+<span class="code-comment"> * ============================================ */</span>
+
+<span class="code-keyword">#include</span> <span class="code-string">"ai_datatypes_defines.h"</span>
+<span class="code-keyword">#include</span> <span class="code-string">"network.h"</span>
+<span class="code-keyword">#include</span> <span class="code-string">"network_data.h"</span>
+<span class="code-keyword">#include</span> <span class="code-string">"stm32n6xx_hal.h"</span>
+
+<span class="code-comment">/* Buffers de entrada/salida alineados para la NPU */</span>
+<span class="code-keyword">__attribute__</span>((section(<span class="code-string">".nn.tensor"</span>)))
+<span class="code-keyword">__attribute__</span>((aligned(4)))
+<span class="code-keyword">ai_float</span> in_data[AI_NETWORK_IN_1_SIZE];   <span class="code-comment">// 3 valores flotantes (ax,ay,az)</span>
+
+<span class="code-keyword">__attribute__</span>((section(<span class="code-string">".nn.tensor"</span>)))
+<span class="code-keyword">__attribute__</span>((aligned(4)))
+<span class="code-keyword">ai_float</span> out_data[AI_NETWORK_OUT_1_SIZE]; <span class="code-comment">// 1 valor: probabilidad de anomalía</span>
+
+<span class="code-comment">/* Handles del modelo X-CUBE-AI */</span>
+<span class="code-keyword">ai_handle</span> network = AI_HANDLE_NULL;
+<span class="code-keyword">ai_buffer</span> ai_input[AI_NETWORK_IN_NUM] = {AI_BUFFER_INIT_NULL};
+<span class="code-keyword">ai_buffer</span> ai_output[AI_NETWORK_OUT_NUM] = {AI_BUFFER_INIT_NULL};
+
+<span class="code-comment">/* ============================================</span>
+<span class="code-comment"> * 1. Inicializar el runtime X-CUBE-AI</span>
+<span class="code-comment"> * ============================================ */</span>
+<span class="code-keyword">int</span> <span class="code-function">AI_Init</span>(<span class="code-keyword">void</span>) {
+    <span class="code-keyword">ai_error</span> err;
+
+    <span class="code-comment">/* Crear instancia de la red neuronal */</span>
+    <span class="code-keyword">const</span> <span class="code-keyword">ai_handle</span> acts[] = { network_activations };
+    err = <span class="code-function">ai_network_create</span>(&network, AI_NETWORK_DATA_CONFIG);
+    <span class="code-keyword">if</span> (err.type != AI_ERROR_NONE) <span class="code-keyword">return</span> -<span class="code-number">1</span>;
+
+    <span class="code-comment">/* Asignar pesos y activaciones */</span>
+    <span class="code-keyword">const</span> <span class="code-keyword">ai_network_params</span> params = {
+        AI_NETWORK_DATA_WEIGHTS(network_weights),
+        AI_NETWORK_DATA_ACTIVATIONS(acts)
+    };
+
+    <span class="code-comment">/* Inicializar la red con los parámetros */</span>
+    <span class="code-keyword">if</span> (!<span class="code-function">ai_network_init</span>(network, &params)) <span class="code-keyword">return</span> -<span class="code-number">2</span>;
+
+    <span class="code-comment">/* Configurar buffers de entrada */</span>
+    ai_input[<span class="code-number">0</span>] = <span class="code-function">ai_network_inputs_get</span>(network, NULL)[<span class="code-number">0</span>];
+    ai_output[<span class="code-number">0</span>] = <span class="code-function">ai_network_outputs_get</span>(network, NULL)[<span class="code-number">0</span>];
+
+    <span class="code-keyword">return</span> <span class="code-number">0</span>;
+}
+
+<span class="code-comment">/* ============================================</span>
+<span class="code-comment"> * 2. Leer acelerómetro (simulado por HAL)</span>
+<span class="code-comment"> * ============================================ */</span>
+<span class="code-keyword">void</span> <span class="code-function">Read_Accelerometer</span>(<span class="code-keyword">float</span>* ax, <span class="code-keyword">float</span>* ay, <span class="code-keyword">float</span>* az) {
+    <span class="code-comment">/* En hardware real: HAL_I2C_Mem_Read() del LIS3DH */</span>
+    <span class="code-comment">/* Aquí leemos del sensor vía I2C/SPI */</span>
+    <span class="code-comment">/* *ax = (int16_t)(buffer[0] | buffer[1]&lt;&lt;8) * 0.00098f; */</span>
+}
+
+<span class="code-comment">/* ============================================</span>
+<span class="code-comment"> * 3. Normalizar datos de entrada</span>
+<span class="code-comment"> * ============================================ */</span>
+<span class="code-keyword">void</span> <span class="code-function">Normalize_Input</span>(<span class="code-keyword">float</span> ax, <span class="code-keyword">float</span> ay, <span class="code-keyword">float</span> az) {
+    <span class="code-comment">/* Normalización estándar: (x - mean) / std */</span>
+    <span class="code-keyword">float</span> mean[<span class="code-number">3</span>] = {<span class="code-number">1.28f</span>, <span class="code-number">1.08f</span>, <span class="code-number">-0.52f</span>};
+    <span class="code-keyword">float</span> std[<span class="code-number">3</span>]  = {<span class="code-number">1.45f</span>, <span class="code-number">1.25f</span>, <span class="code-number">0.65f</span>};
+
+    in_data[<span class="code-number">0</span>] = (ax - mean[<span class="code-number">0</span>]) / std[<span class="code-number">0</span>];
+    in_data[<span class="code-number">1</span>] = (ay - mean[<span class="code-number">1</span>]) / std[<span class="code-number">1</span>];
+    in_data[<span class="code-number">2</span>] = (az - mean[<span class="code-number">2</span>]) / std[<span class="code-number">2</span>];
+}
+
+<span class="code-comment">/* ============================================</span>
+<span class="code-comment"> * 4. Ejecutar inferencia con la NPU</span>
+<span class="code-comment"> * ============================================ */</span>
+<span class="code-keyword">float</span> <span class="code-function">AI_Run_Inference</span>(<span class="code-keyword">void</span>) {
+    <span class="code-keyword">ai_i32</span> nbatch;
+    <span class="code-keyword">ai_error</span> err;
+
+    <span class="code-comment">/* Actualizar puntero de entrada con los datos normalizados */</span>
+    ai_input[<span class="code-number">0</span>].data = AI_HANDLE_PTR(in_data);
+    ai_output[<span class="code-number">0</span>].data = AI_HANDLE_PTR(out_data);
+
+    <span class="code-comment">/* Ejecutar inferencia - delega automáticamente a la Ethos-U55 */</span>
+    nbatch = <span class="code-function">ai_network_run</span>(network, &ai_input[<span class="code-number">0</span>], &ai_output[<span class="code-number">0</span>]);
+    <span class="code-keyword">if</span> (nbatch != <span class="code-number">1</span>) { <span class="code-keyword">return</span> -<span class="code-number">1.0f</span>; }
+
+    <span class="code-keyword">return</span> out_data[<span class="code-number">0</span>];  <span class="code-comment">// Probabilidad de anomalía [0.0 - 1.0]</span>
+}
+
+<span class="code-comment">/* ============================================
+<span class="code-comment"> * 5. Loop principal de la aplicación</span>
+<span class="code-comment"> * ============================================ */</span>
+<span class="code-keyword">int</span> <span class="code-function">main</span>(<span class="code-keyword">void</span>) {
+    <span class="code-keyword">float</span> ax, ay, az, confidence;
+
+    <span class="code-function">HAL_Init</span>();
+    <span class="code-function">SystemClock_Config</span>();
+    <span class="code-function">AI_Init</span>();           <span class="code-comment">// Inicializar NPU y modelo</span>
+    <span class="code-function">Sensor_Init</span>();       <span class="code-comment">// Inicializar acelerómetro</span>
+    <span class="code-function">MQTT_Init</span>();         <span class="code-comment">// Conexión al broker</span>
+
+    <span class="code-keyword">while</span> (<span class="code-number">1</span>) {
+        <span class="code-comment">/* Leer sensor */</span>
+        <span class="code-function">Read_Accelerometer</span>(&ax, &ay, &az);
+
+        <span class="code-comment">/* Preparar datos */</span>
+        <span class="code-function">Normalize_Input</span>(ax, ay, az);
+
+        <span class="code-comment">/* Inferencia en la NPU (0.3ms) */</span>
+        confidence = <span class="code-function">AI_Run_Inference</span>();
+
+        <span class="code-comment">/* Interpretar resultado */</span>
+        <span class="code-keyword">if</span> (confidence &gt; <span class="code-number">0.5f</span>) {
+            <span class="code-comment">/* ANOMALÍA detectada */</span>
+            <span class="code-function">Alarm_Activate</span>();           <span class="code-comment">// LED rojo + buzzer</span>
+            <span class="code-function">MQTT_Publish_Alert</span>(ax, ay, az, confidence);
+        } <span class="code-keyword">else</span> {
+            <span class="code-function">Alarm_Deactivate</span>();         <span class="code-comment">// Estado normal</span>
+        }
+
+        <span class="code-function">HAL_Delay</span>(<span class="code-number">100</span>);  <span class="code-comment">// Muestreo a 10 Hz</span>
+    }
+}</code></pre>
+</div>
+
+<!-- ============================================
+     LECCIÓN 4 — COMPARACIÓN CPU vs NPU
+     ============================================ -->
+<div class="card">
+  <h2><span class="lesson-num">4</span> Comparación CPU vs NPU y Exportación</h2>
+
+  <h3>Gráfico comparativo: Tiempo de inferencia</h3>
+  <div class="chart-container">
+    <div class="bar-row">
+      <span class="bar-label">CPU Cortex-M55</span>
+      <div class="bar-track"><div class="bar-fill bar-cpu" id="barCpu" data-width="83%">2.5 ms</div></div>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">NPU Ethos-U55</span>
+      <div class="bar-track"><div class="bar-fill bar-npu" id="barNpu" data-width="10%">0.3 ms</div></div>
+    </div>
+  </div>
+  <div class="speedup-text" id="speedupText">⚡ <span>8.3x</span> más rápido con NPU</div>
+
+  <h3>Consumo energético comparativo</h3>
+  <div class="chart-container">
+    <div class="bar-row">
+      <span class="bar-label">Consumo CPU</span>
+      <div class="bar-track"><div class="bar-fill bar-cpu" id="barCpuEnergy" data-width="85%">45 mJ</div></div>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">Consumo NPU</span>
+      <div class="bar-track"><div class="bar-fill bar-npu" id="barNpuEnergy" data-width="15%">8 mJ</div></div>
+    </div>
+  </div>
+
+  <h3>Gauge de Speedup NPU</h3>
+  <div class="gauge-container">
+    <svg class="gauge-svg" viewBox="0 0 200 200">
+      <circle class="gauge-bg" cx="100" cy="100" r="80"/>
+      <circle class="gauge-fill" id="speedupGauge" cx="100" cy="100" r="80"
+        stroke="#10b981" stroke-dasharray="502" stroke-dashoffset="502"/>
+      <text class="gauge-text" x="100" y="95" id="speedupGaugeText">0x</text>
+      <text class="gauge-label" x="100" y="115">SPEEDUP NPU</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ============================================
+     SIMULADOR DE INFERENCIA INTERACTIVO
+     ============================================ -->
+<div class="card card-npu">
+  <h2>🎮 Simulador de Inferencia Edge AI</h2>
+  <p>Presiona el botón para ejecutar una inferencia simulada con una muestra aleatoria del dataset. El simulador muestra cómo la NPU clasifica la vibración en tiempo real.</p>
+
+  <button class="simulator-btn" id="runInferenceBtn" onclick="runInference()">▶ Ejecutar Inferencia</button>
+
+  <div class="sim-result" id="simResult" style="display:none;">
+    <div class="axes-values">
+      <div class="axis-box"><div class="axis-name">AX</div><div class="axis-val" id="valAx">—</div></div>
+      <div class="axis-box"><div class="axis-name">AY</div><div class="axis-val" id="valAy">—</div></div>
+      <div class="axis-box"><div class="axis-name">AZ</div><div class="axis-val" id="valAz">—</div></div>
+    </div>
+
+    <div style="display:flex; justify-content:center; margin: 16px 0;">
+      <div class="gauge-container">
+        <svg class="gauge-svg" viewBox="0 0 200 200">
+          <circle class="gauge-bg" cx="100" cy="100" r="80"/>
+          <circle class="gauge-fill" id="confidenceGauge" cx="100" cy="100" r="80"
+            stroke="#3b82f6" stroke-dasharray="502" stroke-dashoffset="502"/>
+          <text class="gauge-text" x="100" y="95" id="gaugeText">0%</text>
+          <text class="gauge-label" x="100" y="115">CONFIANZA IA</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="sim-row">
+      <span class="sim-label">Clasificación</span>
+      <span class="sim-value" id="simClass">—</span>
+    </div>
+    <div class="sim-row">
+      <span class="sim-label">Confianza</span>
+      <span class="sim-value" id="simConfidence">—</span>
+    </div>
+    <div class="sim-row">
+      <span class="sim-label">Tiempo de inferencia (NPU)</span>
+      <span class="sim-value" id="simTime">—</span>
+    </div>
+    <div class="sim-row">
+      <span class="sim-label">Tiempo estimado (CPU)</span>
+      <span class="sim-value" id="simTimeCpu">—</span>
+    </div>
+    <div class="sim-row">
+      <span class="sim-label">Muestra #</span>
+      <span class="sim-value" id="simIndex">—</span>
+    </div>
+  </div>
+
+  <h3>Historial de inferencias (últimas 5)</h3>
+  <div class="history-list" id="historyList">
+    <div class="history-item" style="color:#5c6370;">Aún no hay inferencias. Presiona el botón para comenzar.</div>
+  </div>
+</div>
+
+<!-- ============================================
+     EXPORTACIÓN A WOKWI
+     ============================================ -->
+<div class="card">
+  <h2>📤 Exportar a Wokwi Simulator</h2>
+  <p>Exporta el proyecto completo para simularlo en Wokwi. El simulador incluye un STM32N6 virtual con acelerómetro y la inferencia por NPU emulada.</p>
+  <button class="export-btn" onclick="openModal()">📤 Exportar a Wokwi</button>
+</div>
+
+<!-- ============================================
+     FOOTER
+     ============================================ -->
+<footer>
+  <p>STM32N6 Industrial Academy — Módulo 4: Edge AI con Ethos-U55</p>
+  <p style="margin-top:4px;">Generado para la formación en Edge AI, TinyML y aceleración por NPU</p>
+</footer>
+
+</div><!-- /.container -->
+
+<!-- ============================================
+     MODAL WOKWI
+     ============================================ -->
+<div class="modal-overlay" id="wokwiModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📤 Exportar a Wokwi Simulator</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab(0)">diagram.json</button>
+      <button class="modal-tab" onclick="switchTab(1)">main.cpp</button>
+    </div>
+    <div class="modal-tab-content active" id="tab0">
+      <pre style="font-size:0.75rem;"><button class="copy-btn" onclick="copyText('wokwiDiagram')">Copiar</button><code id="wokwiDiagram">{
+  "version": 1,
+  "author": "STM32N6 Industrial Academy",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-st-nucleo-n657x0", "id": "stm32", "top": 0, "left": 0 },
+    { "type": "wokwi-adxl345", "id": "accel", "top": 50, "left": 250 },
+    { "type": "wokwi-led", "id": "ledAlarm", "top": 150, "left": 250, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 200, "left": 250, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "stm32:PB8",  "accel:SDA", "green", [ "h20", "v0" ] ],
+    [ "stm32:PB9",  "accel:SCL", "green", [ "h20", "v0" ] ],
+    [ "stm32:GND.2","accel:GND", "black", [ "h0", "v0" ] ],
+    [ "stm32:3.3V", "accel:VCC", "red",   [ "h0", "v0" ] ],
+    [ "stm32:PA5",  "ledAlarm:A","orange",[ "h0", "v0" ] ],
+    [ "ledAlarm:C", "r1:1",      "black", [ "h0", "v0" ] ],
+    [ "r1:2",       "stm32:GND.3","black",[ "h0", "v0" ] ]
+  ]
+}</code></pre>
+    </div>
+    <div class="modal-tab-content" id="tab1">
+      <pre style="font-size:0.75rem;"><button class="copy-btn" onclick="copyText('wokwiCode')">Copiar</button><code id="wokwiCode">#include &lt;Wire.h&gt;
+#include &lt;ai_platform.h&gt;
+
+/* Pines */
+#define LED_ALARM PA5
+#define ACCEL_ADDR 0x53
+
+/* Modelo tinyML: 3 entradas -> 16 -> 8 -> 1 salida */
+const float weights_l1[3][16] = { /* ... */ };
+const float bias_l1[16] = { /* ... */ };
+const float weights_l2[16][8] = { /* ... */ };
+const float bias_l2[8] = { /* ... */ };
+const float weights_l3[8][1] = { /* ... */ };
+const float bias_l3[1] = { /* ... */ };
+
+float relu(float x) { return x > 0 ? x : 0; }
+float sigmoid(float x) { return 1.0f / (1.0f + expf(-x)); }
+
+float run_inference(float ax, float ay, float az) {
+    float input[3] = {ax, ay, az};
+    float hidden1[16], hidden2[8];
+
+    /* Capa 1: 3 -> 16 (ReLU) */
+    for (int i = 0; i < 16; i++) {
+        hidden1[i] = bias_l1[i];
+        for (int j = 0; j < 3; j++) hidden1[i] += input[j] * weights_l1[j][i];
+        hidden1[i] = relu(hidden1[i]);
+    }
+    /* Capa 2: 16 -> 8 (ReLU) */
+    for (int i = 0; i < 8; i++) {
+        hidden2[i] = bias_l2[i];
+        for (int j = 0; j < 16; j++) hidden2[i] += hidden1[j] * weights_l2[j][i];
+        hidden2[i] = relu(hidden2[i]);
+    }
+    /* Capa 3: 8 -> 1 (Sigmoid) */
+    float output = bias_l3[0];
+    for (int j = 0; j < 8; j++) output += hidden2[j] * weights_l3[j][0];
+    return sigmoid(output);
+}
+
+void setup() {
+    Serial.begin(115200);
+    pinMode(LED_ALARM, OUTPUT);
+    Wire.begin();
+
+    /* Inicializar ADXL345 */
+    Wire.beginTransmission(ACCEL_ADDR);
+    Wire.write(0x2D); Wire.write(0x08); /* Measure mode */
+    Wire.endTransmission();
+
+    Serial.println("Smart Factory Guardian - Iniciado");
+    Serial.println("NPU Ethos-U55: Emulación activa");
+}
+
+void loop() {
+    /* Leer acelerómetro */
+    int16_t rawX, rawY, rawZ;
+    Wire.beginTransmission(ACCEL_ADDR);
+    Wire.write(0x32); Wire.endTransmission();
+    Wire.requestFrom(ACCEL_ADDR, 6);
+    rawX = Wire.read() | (Wire.read() << 8);
+    rawY = Wire.read() | (Wire.read() << 8);
+    rawZ = Wire.read() | (Wire.read() << 8);
+
+    float ax = rawX * 0.0039f;
+    float ay = rawY * 0.0039f;
+    float az = rawZ * 0.0039f;
+
+    /* Inferencia en NPU (emulada) */
+    unsigned long t0 = micros();
+    float confidence = run_inference(ax, ay, az);
+    unsigned long inference_time = micros() - t0;
+
+    /* Resultado */
+    Serial.print("AX="); Serial.print(ax, 2);
+    Serial.print(" AY="); Serial.print(ay, 2);
+    Serial.print(" AZ="); Serial.print(az, 2);
+    Serial.print(" | Confianza="); Serial.print(confidence, 4);
+    Serial.print(" | Tiempo="); Serial.print(inference_time); Serial.println("us");
+
+    if (confidence > 0.5f) {
+        digitalWrite(LED_ALARM, HIGH);
+        Serial.println("🚨 ANOMALÍA DETECTADA");
+    } else {
+        digitalWrite(LED_ALARM, LOW);
+    }
+
+    delay(100); /* 10 Hz sampling */
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     JAVASCRIPT
+     ============================================ -->
+<script>
+/* ============================================
+   DATASET DE 20 MUESTRAS
+   ============================================ */
+const DATASET = [
+  {ax:0.12, ay:0.05, az:-0.98, label:0},
+  {ax:0.45, ay:0.23, az:-0.87, label:0},
+  {ax:1.89, ay:2.34, az:-0.45, label:1},
+  {ax:3.21, ay:2.89, az:0.12, label:1},
+  {ax:0.08, ay:0.03, az:-1.02, label:0},
+  {ax:0.67, ay:0.45, az:-0.76, label:0},
+  {ax:2.45, ay:1.98, az:-0.23, label:1},
+  {ax:3.89, ay:3.12, az:0.56, label:1},
+  {ax:0.23, ay:0.11, az:-0.95, label:0},
+  {ax:0.34, ay:0.19, az:-0.88, label:0},
+  {ax:4.12, ay:3.45, az:0.78, label:1},
+  {ax:2.78, ay:2.23, az:-0.34, label:1},
+  {ax:0.15, ay:0.07, az:-0.99, label:0},
+  {ax:0.56, ay:0.31, az:-0.82, label:0},
+  {ax:3.45, ay:2.87, az:0.45, label:1},
+  {ax:1.23, ay:1.56, az:-0.67, label:1},
+  {ax:0.09, ay:0.04, az:-1.01, label:0},
+  {ax:0.78, ay:0.52, az:-0.73, label:0},
+  {ax:2.98, ay:2.45, az:-0.12, label:1},
+  {ax:4.56, ay:3.78, az:0.89, label:1}
+];
+
+const HISTORY = [];
+const CIRCUMFERENCE = 2 * Math.PI * 80; // ~502.65
+
+/* ============================================
+   INICIALIZACIÓN
+   ============================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderDatasetTable();
+  setTimeout(() => {
+    animateBars();
+    animateSpeedupGauge();
+  }, 500);
+});
+
+/* ============================================
+   TABLA DEL DATASET
+   ============================================ */
+function renderDatasetTable() {
+  const table = document.getElementById('datasetTable');
+  DATASET.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.className = row.label === 0 ? 'row-normal' : 'row-anomaly';
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${row.ax.toFixed(2)}</td>
+      <td>${row.ay.toFixed(2)}</td>
+      <td>${row.az.toFixed(2)}</td>
+      <td>${row.label}</td>
+      <td>${row.label === 0
+        ? '<span class="status-badge status-normal">✅ NORMAL</span>'
+        : '<span class="status-badge status-critico">🚨 ANOMALÍA</span>'}</td>
+    `;
+    table.appendChild(tr);
+  });
+}
+
+/* ============================================
+   ANIMAR BARRAS
+   ============================================ */
+function animateBars() {
+  ['barCpu','barNpu','barCpuEnergy','barNpuEnergy'].forEach(id => {
+    const bar = document.getElementById(id);
+    if (bar) bar.style.width = bar.dataset.width;
+  });
+}
+
+/* ============================================
+   ANIMAR GAUGE DE SPEEDUP
+   ============================================ */
+function animateSpeedupGauge() {
+  const gauge = document.getElementById('speedupGauge');
+  const text = document.getElementById('speedupGaugeText');
+  const targetOffset = CIRCUMFERENCE * (1 - 8.3 / 10); // 8.3x de 10x max
+  let current = CIRCUMFERENCE;
+  const step = (CIRCUMFERENCE - targetOffset) / 60;
+  let val = 0;
+
+  function frame() {
+    current -= step;
+    val += 8.3 / 60;
+    if (current <= targetOffset) {
+      current = targetOffset;
+      val = 8.3;
+    }
+    gauge.style.strokeDashoffset = current;
+    text.textContent = val.toFixed(1) + 'x';
+    if (current > targetOffset) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ============================================
+   SIMULADOR DE INFERENCIA
+   ============================================ */
+function runInference() {
+  const btn = document.getElementById('runInferenceBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Ejecutando...';
+
+  setTimeout(() => {
+    const idx = Math.floor(Math.random() * DATASET.length);
+    const sample = DATASET[idx];
+
+    // Simular inferencia: usar magnitud de vibración como proxy de confianza
+    const magnitude = Math.sqrt(sample.ax**2 + sample.ay**2 + sample.az**2);
+    // Normalizar a confianza de anomalía
+    let confidence = (magnitude - 0.5) / 3.5;
+    confidence = Math.max(0.05, Math.min(0.95, confidence));
+    if (sample.label === 1) {
+      confidence = 0.55 + Math.random() * 0.4;
+    } else {
+      confidence = 0.05 + Math.random() * 0.35;
+    }
+    confidence = Math.round(confidence * 100);
+
+    const isAnomaly = confidence > 50;
+    const timeNpu = (0.25 + Math.random() * 0.1).toFixed(2);
+    const timeCpu = (timeNpu * 8.3).toFixed(2);
+
+    // Mostrar resultado
+    document.getElementById('simResult').style.display = 'block';
+    document.getElementById('valAx').textContent = sample.ax.toFixed(2);
+    document.getElementById('valAy').textContent = sample.ay.toFixed(2);
+    document.getElementById('valAz').textContent = sample.az.toFixed(2);
+    document.getElementById('simConfidence').textContent = confidence + '%';
+    document.getElementById('simTime').textContent = timeNpu + ' ms';
+    document.getElementById('simTimeCpu').textContent = timeCpu + ' ms';
+    document.getElementById('simIndex').textContent = (idx + 1);
+
+    // Badge de clasificación
+    const classEl = document.getElementById('simClass');
+    if (confidence > 80) {
+      classEl.innerHTML = '<span class="status-badge status-normal">✅ NORMAL</span>';
+    } else if (confidence >= 50) {
+      classEl.innerHTML = '<span class="status-badge status-alerta">⚠️ ALERTA</span>';
+    } else {
+      classEl.innerHTML = '<span class="status-badge status-critico">🚨 ANOMALÍA</span>';
+    }
+
+    // Actualizar gauge de confianza
+    updateConfidenceGauge(confidence);
+
+    // Actualizar banner de estado
+    updateStatusBanner(confidence, isAnomaly);
+
+    // Guardar en historial
+    HISTORY.unshift({ idx: idx+1, confidence, isAnomaly, time: timeNpu });
+    if (HISTORY.length > 5) HISTORY.pop();
+    renderHistory();
+
+    btn.disabled = false;
+    btn.textContent = '▶ Ejecutar Inferencia';
+  }, 400);
+}
+
+/* ============================================
+   ACTUALIZAR GAUGE DE CONFIANZA
+   ============================================ */
+function updateConfidenceGauge(percentage) {
+  const gauge = document.getElementById('confidenceGauge');
+  const text = document.getElementById('gaugeText');
+  const offset = CIRCUMFERENCE * (1 - percentage / 100);
+
+  // Color según rango
+  let color = '#ef4444';
+  if (percentage >= 80) color = '#10b981';
+  else if (percentage >= 50) color = '#f59e0b';
+
+  gauge.style.stroke = color;
+  gauge.style.strokeDashoffset = offset;
+  text.textContent = percentage + '%';
+  text.style.fill = color;
+}
+
+/* ============================================
+   ACTUALIZAR BANNER DE ESTADO
+   ============================================ */
+function updateStatusBanner(confidence, isAnomaly) {
+  const banner = document.getElementById('statusBanner');
+  const icon = document.getElementById('statusIcon');
+  const text = document.getElementById('statusText');
+
+  banner.className = 'status-banner';
+  if (confidence >= 80) {
+    banner.classList.add('normal');
+    icon.textContent = '✅';
+    text.textContent = `ESTADO DE FÁBRICA: NORMAL — Confianza: ${confidence}%`;
+  } else if (confidence >= 50) {
+    banner.classList.add('alerta');
+    icon.textContent = '⚠️';
+    text.textContent = `ESTADO DE FÁBRICA: ALERTA — Confianza: ${confidence}%`;
+  } else {
+    banner.classList.add('critico');
+    icon.textContent = '🚨';
+    text.textContent = `ESTADO DE FÁBRICA: CRÍTICO — Anomalía detectada (${confidence}%)`;
+  }
+}
+
+/* ============================================
+   RENDERIZAR HISTORIAL
+   ============================================ */
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  list.innerHTML = '';
+  HISTORY.forEach(h => {
+    const item = document.createElement('div');
+    item.className = 'history-item fade-in';
+    item.innerHTML = `
+      <div class="history-dot ${h.isAnomaly ? 'anomaly' : 'normal'}"></div>
+      <span style="flex:1;">Muestra #${h.idx}</span>
+      <span style="color:${h.confidence >= 80 ? '#10b981' : h.confidence >= 50 ? '#f59e0b' : '#ef4444'};font-weight:600;">${h.confidence}%</span>
+      <span style="color:#9ca3af;">${h.time}ms</span>
+    `;
+    list.appendChild(item);
+  });
+}
+
+/* ============================================
+   MODAL WOKWI
+   ============================================ */
+function openModal() { document.getElementById('wokwiModal').classList.add('active'); }
+function closeModal() { document.getElementById('wokwiModal').classList.remove('active'); }
+function switchTab(n) {
+  document.querySelectorAll('.modal-tab').forEach((t, i) => t.classList.toggle('active', i === n));
+  document.querySelectorAll('.modal-tab-content').forEach((c, i) => c.classList.toggle('active', i === n));
+}
+
+/* ============================================
+   COPIAR AL PORTAPAPELES
+   ============================================ */
+function copyCode(id) {
+  const el = document.getElementById(id);
+  const text = el.querySelector('code') ? el.querySelector('code').innerText : el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
+function copyText(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.innerText).then(() => {
+    const btn = el.parentElement.querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

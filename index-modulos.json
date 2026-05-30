@@ -1,0 +1,92 @@
+{
+  "academy": "STM32N6 Industrial Academy",
+  "version": "1.0.0",
+  "lastUpdated": "2026-05-31",
+  "totalModules": 4,
+  "modules": [
+    {
+      "id": "mod1",
+      "title": "Fundamentos STM32N6",
+      "description": "Arquitectura Cortex-M55 + Ethos-U55, instalación STM32CubeIDE, primer proyecto HAL con blink LED, Clock Tree básico y configuración de GPIO.",
+      "file": "mod1-fundamentos.html",
+      "lessons": 5,
+      "durationMinutes": 45,
+      "difficulty": "Principiante",
+      "tags": [
+        "HAL",
+        "GPIO",
+        "Clock",
+        "Cortex-M55",
+        "Ethos-U55",
+        "STM32CubeIDE"
+      ],
+      "hasQuiz": true,
+      "hasCode": true,
+      "hasSimulation": false
+    },
+    {
+      "id": "mod2",
+      "title": "Sensores e Interfaces",
+      "description": "Interfaz I2C con TMP117 y OLED SSD1306, SPI con BMP280, ADC para sensores 4-20mA industriales, y DMA para adquisición continua.",
+      "file": "mod2-sensores.html",
+      "lessons": 4,
+      "durationMinutes": 60,
+      "difficulty": "Intermedio",
+      "tags": [
+        "I2C",
+        "SPI",
+        "ADC",
+        "DMA",
+        "TMP117",
+        "BMP280",
+        "OLED",
+        "Wokwi"
+      ],
+      "hasQuiz": false,
+      "hasCode": true,
+      "hasSimulation": true
+    },
+    {
+      "id": "mod3",
+      "title": "Comunicaciones Industriales",
+      "description": "UART para RS-485, Modbus RTU maestro/esclavo, CAN bus con filtros, y Ethernet + MQTT para IoT industrial.",
+      "file": "mod3-comunicaciones.html",
+      "lessons": 4,
+      "durationMinutes": 55,
+      "difficulty": "Avanzado",
+      "tags": [
+        "RS-485",
+        "Modbus",
+        "CAN",
+        "MQTT",
+        "Ethernet",
+        "UART",
+        "Terminal"
+      ],
+      "hasQuiz": true,
+      "hasCode": true,
+      "hasSimulation": true
+    },
+    {
+      "id": "mod4",
+      "title": "Edge AI con Ethos-U55",
+      "description": "NPU Ethos-U55, flujo STM32Cube.AI, proyecto Smart Factory Guardian para clasificación de vibración anómala con acelerómetro + NPU.",
+      "file": "mod4-edgeai.html",
+      "lessons": 4,
+      "durationMinutes": 70,
+      "difficulty": "Experto",
+      "tags": [
+        "EdgeAI",
+        "NPU",
+        "TinyML",
+        "STM32Cube.AI",
+        "TensorFlow",
+        "MQTT",
+        "Wokwi"
+      ],
+      "hasQuiz": false,
+      "hasCode": true,
+      "hasSimulation": true
+    }
+  ]
+}

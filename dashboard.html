@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard SCADA Industrial</title>
+    <!-- Chart.js desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        /* ============================================
+           ESTILOS GENERALES - TEMA OSCURO INDUSTRIAL
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Consolas', 'Courier New', monospace;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header del dashboard */
+        .header {
+            background: linear-gradient(90deg, #2d2d2d 0%, #1a1a1a 100%);
+            padding: 15px 25px;
+            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            color: #00d4ff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header .status {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online { background-color: #00ff88; }
+        .status-dot.warning { background-color: #ffcc00; }
+        .status-dot.critical { background-color: #ff4444; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Grid principal del dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 320px;
+            grid-template-rows: auto auto auto;
+            gap: 15px;
+            padding: 15px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Tarjetas de panel */
+        .panel {
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .panel-title {
+            font-size: 0.9rem;
+            color: #00d4ff;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ============================================
+           FILA SUPERIOR - 4 GAUGES CIRCULARES
+           ============================================ */
+        .gauges-row {
+            grid-column: 1 / 4;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .gauge-container {
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .gauge-container h3 {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .gauge-value {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-top: 8px;
+            font-family: 'Consolas', monospace;
+        }
+
+        .gauge-unit {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        canvas.gauge-canvas {
+            max-width: 160px;
+            max-height: 160px;
+            margin: 0 auto;
+        }
+
+        /* ============================================
+           FILA CENTRAL - GRÁFICAS DE LÍNEA
+           ============================================ */
+        .charts-row {
+            grid-column: 1 / 3;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .chart-panel {
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .chart-panel canvas {
+            max-height: 250px;
+        }
+
+        /* ============================================
+           PANEL DERECHO - TABLA DE ALARMAS
+           ============================================ */
+        .alarms-panel {
+            grid-column: 3 / 4;
+            grid-row: 2 / 4;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+        }
+
+        .alarms-table-container {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .alarms-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .alarms-table th {
+            background: #333;
+            color: #00d4ff;
+            padding: 8px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+        }
+
+        .alarms-table td {
+            padding: 8px;
+            border-bottom: 1px solid #444;
+        }
+
+        .alarms-table tr:hover {
+            background: #333;
+        }
+
+        /* Estados de alarma con colores */
+        .alarm-normal {
+            background-color: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+        }
+
+        .alarm-warning {
+            background-color: rgba(255, 204, 0, 0.15);
+            color: #ffcc00;
+            animation: blink-warning 1.5s infinite;
+        }
+
+        .alarm-critical {
+            background-color: rgba(255, 68, 68, 0.15);
+            color: #ff4444;
+            animation: blink-critical 0.8s infinite;
+        }
+
+        @keyframes blink-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes blink-critical {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .btn-ack {
+            background: #444;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+
+        .btn-ack:hover {
+            background: #00d4ff;
+            color: #1a1a1a;
+        }
+
+        .btn-ack:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ============================================
+           PANEL INFERIOR - LOG DE EVENTOS
+           ============================================ */
+        .logs-panel {
+            grid-column: 1 / 3;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 220px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logs-container {
+            flex: 1;
+            overflow-y: auto;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .log-timestamp {
+            color: #888;
+        }
+
+        .log-info { color: #00d4ff; }
+        .log-warning { color: #ffcc00; }
+        .log-error { color: #ff4444; }
+        .log-success { color: #00ff88; }
+
+        /* ============================================
+           BOTÓN EXPORTAR
+           ============================================ */
+        .export-section {
+            grid-column: 1 / 4;
+            display: flex;
+            justify-content: flex-end;
+            padding: 0 15px 15px;
+        }
+
+        .btn-export {
+            background: linear-gradient(90deg, #00d4ff, #0099cc);
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .gauges-row {
+                grid-column: 1 / 3;
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .alarms-panel {
+                grid-column: 1 / 3;
+                grid-row: auto;
+            }
+            .charts-row {
+                grid-column: 1 / 3;
+            }
+            .logs-panel {
+                grid-column: 1 / 3;
+            }
+            .export-section {
+                grid-column: 1 / 3;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================
+         HEADER DEL DASHBOARD
+         ============================================ -->
+    <header class="header">
+        <h1>🔧 SCADA Industrial - Línea de Producción #1</h1>
+        <div class="status">
+            <div class="status-item">
+                <span class="status-dot online"></span>
+                <span>Sistema Online</span>
+            </div>
+            <div class="status-item">
+                <span>🕐</span>
+                <span id="clock">--:--:--</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================
+         GRID PRINCIPAL DEL DASHBOARD
+         ============================================ -->
+    <div class="dashboard-grid">
+
+        <!-- FILA SUPERIOR: 4 GAUGES CIRCULARES -->
+        <div class="gauges-row">
+            <!-- Gauge 1: Temperatura -->
+            <div class="gauge-container">
+                <h3>🌡️ Temperatura</h3>
+                <canvas id="gaugeTemp" class="gauge-canvas" width="160" height="160"></canvas>
+                <div class="gauge-value" id="valTemp">--</div>
+                <div class="gauge-unit">°C</div>
+            </div>
+            <!-- Gauge 2: Presión -->
+            <div class="gauge-container">
+                <h3>💨 Presión</h3>
+                <canvas id="gaugePresion" class="gauge-canvas" width="160" height="160"></canvas>
+                <div class="gauge-value" id="valPresion">--</div>
+                <div class="gauge-unit">bar</div>
+            </div>
+            <!-- Gauge 3: RPM -->
+            <div class="gauge-container">
+                <h3>⚙️ RPM Motor</h3>
+                <canvas id="gaugeRPM" class="gauge-canvas" width="160" height="160"></canvas>
+                <div class="gauge-value" id="valRPM">--</div>
+                <div class="gauge-unit">rpm</div>
+            </div>
+            <!-- Gauge 4: Vibración -->
+            <div class="gauge-container">
+                <h3>📳 Vibración</h3>
+                <canvas id="gaugeVib" class="gauge-canvas" width="160" height="160"></canvas>
+                <div class="gauge-value" id="valVib">--</div>
+                <div class="gauge-unit">mm/s</div>
+            </div>
+        </div>
+
+        <!-- FILA CENTRAL: 2 GRÁFICAS DE LÍNEA EN TIEMPO REAL -->
+        <div class="charts-row">
+            <div class="chart-panel">
+                <div class="panel-title">
+                    <span>📈 Temperatura vs Presión (60s)</span>
+                </div>
+                <canvas id="chartTempPresion"></canvas>
+            </div>
+            <div class="chart-panel">
+                <div class="panel-title">
+                    <span>📉 RPM vs Vibración (60s)</span>
+                </div>
+                <canvas id="chartRPMVib"></canvas>
+            </div>
+        </div>
+
+        <!-- PANEL DERECHO: TABLA DE ALARMAS -->
+        <div class="alarms-panel">
+            <div class="panel-title">
+                <span>🚨 Alarmas Activas</span>
+                <span id="alarmCount" style="color:#ff4444;">0</span>
+            </div>
+            <div class="alarms-table-container">
+                <table class="alarms-table">
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Tag</th>
+                            <th>Desc</th>
+                            <th>Nivel</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alarmsBody">
+                        <!-- Alarmas generadas dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PANEL INFERIOR: LOG DE EVENTOS -->
+        <div class="logs-panel">
+            <div class="panel-title">
+                <span>📝 Log de Eventos</span>
+                <span style="font-size:0.7rem; color:#888;">ISO 8601</span>
+            </div>
+            <div class="logs-container" id="logsContainer">
+                <!-- Logs generados dinámicamente -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTÓN EXPORTAR DATOS -->
+    <div class="export-section">
+        <button class="btn-export" onclick="exportarCSV()">
+            ⬇️ Exportar Datos (CSV)
+        </button>
+    </div>
+
+    <!-- ============================================
+         SCRIPTS JAVASCRIPT
+         ============================================ -->
+    <script>
+        // ============================================
+        // CONFIGURACIÓN GLOBAL
+        // ============================================
+        const MAX_HISTORY = 300; // 5 minutos de historial a 1Hz
+        const UPDATE_INTERVAL = 1000; // 1 segundo
+
+        // Rangos de los sensores simulados
+        const RANGES = {
+            temp: { min: 20, max: 120, normal: 80, warning: 100, critical: 110 },
+            presion: { min: 0, max: 10, normal: 6, warning: 8, critical: 9 },
+            rpm: { min: 0, max: 3000, normal: 1800, warning: 2500, critical: 2800 },
+            vibracion: { min: 0, max: 15, normal: 5, warning: 10, critical: 12 }
+        };
+
+        // Historial completo para exportar CSV
+        let dataHistory = [];
+
+        // Alarmas activas
+        let activeAlarms = [];
+        let alarmIdCounter = 1;
+
+        // ============================================
+        // RELOJ EN VIVO
+        // ============================================
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('es-ES');
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // ============================================
+        // FUNCIÓN PARA DIBUJAR GAUGES CIRCULARES (CANVAS)
+        // ============================================
+        function drawGauge(canvasId, value, min, max, warning, critical, colorNormal, colorWarning, colorCritical) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 65;
+
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Fondo del arco (gris oscuro)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0.75 * Math.PI, 2.25 * Math.PI);
+            ctx.lineWidth = 12;
+            ctx.strokeStyle = '#333';
+            ctx.stroke();
+
+            // Calcular porcentaje y color
+            const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+            let color = colorNormal;
+            if (value >= critical) color = colorCritical;
+            else if (value >= warning) color = colorWarning;
+
+            // Arco de valor (color según estado)
+            const endAngle = 0.75 * Math.PI + (pct * 1.5 * Math.PI);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0.75 * Math.PI, endAngle);
+            ctx.lineWidth = 12;
+            ctx.strokeStyle = color;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Texto central (valor actual)
+            ctx.fillStyle = color;
+            ctx.font = 'bold 22px Consolas, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(value.toFixed(1), centerX, centerY - 5);
+
+            // Texto de porcentaje
+            ctx.fillStyle = '#888';
+            ctx.font = '11px Consolas, monospace';
+            ctx.fillText((pct * 100).toFixed(0) + '%', centerX, centerY + 15);
+
+            // Marcas de referencia (min, max)
+            ctx.fillStyle = '#555';
+            ctx.font = '9px Consolas, monospace';
+            ctx.fillText(min, centerX - 55, centerY + 50);
+            ctx.fillText(max, centerX + 55, centerY + 50);
+        }
+
+        // ============================================
+        // GRÁFICAS CHART.JS - CONFIGURACIÓN
+        // ============================================
+        const commonChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 }, // Desactivar animación para fluidez en tiempo real
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    labels: { color: '#aaa', font: { family: 'Consolas', size: 11 } }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#888', font: { family: 'Consolas', size: 9 }, maxTicksLimit: 6 },
+                    grid: { color: '#333' }
+                },
+                y: {
+                    ticks: { color: '#888', font: { family: 'Consolas', size: 9 } },
+                    grid: { color: '#333' }
+                }
+            }
+        };
+
+        // Gráfica 1: Temperatura y Presión
+        const ctx1 = document.getElementById('chartTempPresion').getContext('2d');
+        const chartTempPresion = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Temperatura (°C)',
+                        data: [],
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Presión (bar)',
+                        data: [],
+                        borderColor: '#4ecdc4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                ...commonChartOptions,
+                scales: {
+                    ...commonChartOptions.scales,
+                    y1: {
+                        position: 'right',
+                        ticks: { color: '#4ecdc4', font: { family: 'Consolas', size: 9 } },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+
+        // Gráfica 2: RPM y Vibración
+        const ctx2 = document.getElementById('chartRPMVib').getContext('2d');
+        const chartRPMVib = new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'RPM',
+                        data: [],
+                        borderColor: '#ffd93d',
+                        backgroundColor: 'rgba(255, 217, 61, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Vibración (mm/s)',
+                        data: [],
+                        borderColor: '#a8e6cf',
+                        backgroundColor: 'rgba(168, 230, 207, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                ...commonChartOptions,
+                scales: {
+                    ...commonChartOptions.scales,
+                    y1: {
+                        position: 'right',
+                        ticks: { color: '#a8e6cf', font: { family: 'Consolas', size: 9 } },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+
+        // ============================================
+        // SIMULACIÓN DE DATOS CON RUIDO REALISTA
+        // ============================================
+        let currentValues = {
+            temp: 45,
+            presion: 3.5,
+            rpm: 1200,
+            vibracion: 2.0
+        };
+
+        function simulateValue(current, target, noise, min, max) {
+            // Mover hacia el target con inercia
+            const diff = target - current;
+            const step = diff * 0.1 + (Math.random() - 0.5) * noise;
+            let newVal = current + step;
+            // Limitar a rango
+            return Math.max(min, Math.min(max, newVal));
+        }
+
+        // Targets que cambian lentamente para simular escenarios reales
+        let targets = {
+            temp: 65,
+            presion: 5.0,
+            rpm: 1600,
+            vibracion: 3.5
+        };
+
+        // Cada 30 segundos cambiar targets para simular cambios de proceso
+        setInterval(() => {
+            targets.temp = 40 + Math.random() * 70;      // 40-110°C
+            targets.presion = 1 + Math.random() * 7;      // 1-8 bar
+            targets.rpm = 800 + Math.random() * 1800;     // 800-2600 rpm
+            targets.vibracion = 1 + Math.random() * 10;   // 1-11 mm/s
+        }, 30000);
+
+        // ============================================
+        // LOG DE EVENTOS
+        // ============================================
+        function addLog(message, type = 'info') {
+            const container = document.getElementById('logsContainer');
+            const now = new Date();
+            const timestamp = now.toISOString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-timestamp">${timestamp}</span> <span class="log-${type}">${message}</span>`;
+            container.insertBefore(entry, container.firstChild);
+            // Mantener solo últimos 50 logs
+            while (container.children.length > 50) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        // ============================================
+        // SISTEMA DE ALARMAS
+        // ============================================
+        function checkAlarms(values) {
+            const checks = [
+                { tag: 'TEMP_01', name: 'Temperatura', val: values.temp, ...RANGES.temp },
+                { tag: 'PRES_01', name: 'Presión', val: values.presion, ...RANGES.presion },
+                { tag: 'RPM_01', name: 'RPM Motor', val: values.rpm, ...RANGES.rpm },
+                { tag: 'VIB_01', name: 'Vibración', val: values.vibracion, ...RANGES.vibracion }
+            ];
+
+            checks.forEach(check => {
+                let level = 'normal';
+                if (check.val >= check.critical) level = 'critical';
+                else if (check.val >= check.warning) level = 'warning';
+
+                if (level !== 'normal') {
+                    // Verificar si ya existe alarma activa para este tag
+                    const existing = activeAlarms.find(a => a.tag === check.tag && !a.acknowledged);
+                    if (!existing) {
+                        const alarm = {
+                            id: alarmIdCounter++,
+                            tag: check.tag,
+                            description: `${check.name} ${level === 'critical' ? 'CRÍTICA' : 'ALTA'}: ${check.val.toFixed(1)}`,
+                            level: level,
+                            timestamp: new Date().toISOString(),
+                            acknowledged: false
+                        };
+                        activeAlarms.unshift(alarm);
+                        addLog(`ALARMA ${level.toUpperCase()}: ${alarm.description}`, level === 'critical' ? 'error' : 'warning');
+                        renderAlarms();
+                    }
+                }
+            });
+        }
+
+        function renderAlarms() {
+            const tbody = document.getElementById('alarmsBody');
+            const countEl = document.getElementById('alarmCount');
+            tbody.innerHTML = '';
+
+            const unacknowledged = activeAlarms.filter(a => !a.acknowledged);
+            countEl.textContent = unacknowledged.length;
+
+            activeAlarms.slice(0, 20).forEach(alarm => {
+                const row = document.createElement('tr');
+                row.className = alarm.acknowledged ? '' : `alarm-${alarm.level}`;
+
+                const timeStr = new Date(alarm.timestamp).toLocaleTimeString('es-ES');
+                const levelBadge = alarm.level === 'critical' ? '🔴 CRÍT' :
+                                   alarm.level === 'warning' ? '🟡 ADV' : '🟢 OK';
+
+                row.innerHTML = `
+                    <td>${timeStr}</td>
+                    <td>${alarm.tag}</td>
+                    <td>${alarm.description}</td>
+                    <td>${levelBadge}</td>
+                    <td>
+                        <button class="btn-ack" onclick="acknowledgeAlarm(${alarm.id})" ${alarm.acknowledged ? 'disabled' : ''}>
+                            ${alarm.acknowledged ? '✓ Ack' : 'Ack'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function acknowledgeAlarm(id) {
+            const alarm = activeAlarms.find(a => a.id === id);
+            if (alarm) {
+                alarm.acknowledged = true;
+                addLog(`Alarm acknowledge: ${alarm.tag} - ${alarm.description}`, 'success');
+                renderAlarms();
+            }
+        }
+
+        // ============================================
+        // BUCLE PRINCIPAL DE ACTUALIZACIÓN (1Hz)
+        // ============================================
+        function updateDashboard() {
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString('es-ES', { hour12: false });
+
+            // Simular nuevos valores con inercia y ruido
+            currentValues.temp = simulateValue(currentValues.temp, targets.temp, 3, RANGES.temp.min, RANGES.temp.max);
+            currentValues.presion = simulateValue(currentValues.presion, targets.presion, 0.3, RANGES.presion.min, RANGES.presion.max);
+            currentValues.rpm = simulateValue(currentValues.rpm, targets.rpm, 50, RANGES.rpm.min, RANGES.rpm.max);
+            currentValues.vibracion = simulateValue(currentValues.vibracion, targets.vibracion, 0.5, RANGES.vibracion.min, RANGES.vibracion.max);
+
+            // Actualizar textos de gauges
+            document.getElementById('valTemp').textContent = currentValues.temp.toFixed(1);
+            document.getElementById('valPresion').textContent = currentValues.presion.toFixed(2);
+            document.getElementById('valRPM').textContent = Math.round(currentValues.rpm);
+            document.getElementById('valVib').textContent = currentValues.vibracion.toFixed(2);
+
+            // Redibujar gauges
+            drawGauge('gaugeTemp', currentValues.temp, RANGES.temp.min, RANGES.temp.max, RANGES.temp.warning, RANGES.temp.critical, '#00ff88', '#ffcc00', '#ff4444');
+            drawGauge('gaugePresion', currentValues.presion, RANGES.presion.min, RANGES.presion.max, RANGES.presion.warning, RANGES.presion.critical, '#00ff88', '#ffcc00', '#ff4444');
+            drawGauge('gaugeRPM', currentValues.rpm, RANGES.rpm.min, RANGES.rpm.max, RANGES.rpm.warning, RANGES.rpm.critical, '#00ff88', '#ffcc00', '#ff4444');
+            drawGauge('gaugeVib', currentValues.vibracion, RANGES.vibracion.min, RANGES.vibracion.max, RANGES.vibracion.warning, RANGES.vibracion.critical, '#00ff88', '#ffcc00', '#ff4444');
+
+            // Actualizar gráficas (mantener últimos 60 segundos = 60 puntos)
+            const labels1 = chartTempPresion.data.labels;
+            const dataTemp = chartTempPresion.data.datasets[0].data;
+            const dataPres = chartTempPresion.data.datasets[1].data;
+
+            labels1.push(timeLabel);
+            dataTemp.push(currentValues.temp);
+            dataPres.push(currentValues.presion);
+            if (labels1.length > 60) { labels1.shift(); dataTemp.shift(); dataPres.shift(); }
+            chartTempPresion.update('none'); // 'none' para performance
+
+            const labels2 = chartRPMVib.data.labels;
+            const dataRPM = chartRPMVib.data.datasets[0].data;
+            const dataVib = chartRPMVib.data.datasets[1].data;
+
+            labels2.push(timeLabel);
+            dataRPM.push(currentValues.rpm);
+            dataVib.push(currentValues.vibracion);
+            if (labels2.length > 60) { labels2.shift(); dataRPM.shift(); dataVib.shift(); }
+            chartRPMVib.update('none');
+
+            // Guardar en historial para exportar CSV
+            dataHistory.push({
+                timestamp: now.toISOString(),
+                temperatura: currentValues.temp.toFixed(2),
+                presion: currentValues.presion.toFixed(2),
+                rpm: Math.round(currentValues.rpm),
+                vibracion: currentValues.vibracion.toFixed(2)
+            });
+            if (dataHistory.length > MAX_HISTORY) {
+                dataHistory.shift();
+            }
+
+            // Verificar alarmas
+            checkAlarms(currentValues);
+        }
+
+        // Iniciar bucle
+        setInterval(updateDashboard, UPDATE_INTERVAL);
+        updateDashboard(); // Primera ejecución inmediata
+
+        // Log inicial
+        addLog('Dashboard SCADA iniciado - Simulación activa', 'info');
+        addLog('Sistema de alarmas en línea', 'success');
+
+        // ============================================
+        // EXPORTAR DATOS A CSV
+        // ============================================
+        function exportarCSV() {
+            if (dataHistory.length === 0) {
+                alert('No hay datos para exportar. Espera a que se genere al menos 1 segundo de simulación.');
+                return;
+            }
+
+            // Cabeceras CSV
+            const headers = ['timestamp', 'temperatura_C', 'presion_bar', 'rpm', 'vibracion_mm_s'];
+            const rows = dataHistory.map(row => [
+                row.timestamp,
+                row.temperatura,
+                row.presion,
+                row.rpm,
+                row.vibracion
+            ]);
+
+            // Construir contenido CSV
+            let csvContent = '\uFEFF'; // BOM para UTF-8
+            csvContent += headers.join(';') + '\n';
+            rows.forEach(row => {
+                csvContent += row.join(';') + '\n';
+            });
+
+            // Crear blob y descargar
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const fecha = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `scada_datos_${fecha}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            addLog(`Exportación CSV completada: ${dataHistory.length} registros`, 'success');
+        }
+    </script>
+</body>
+</html>

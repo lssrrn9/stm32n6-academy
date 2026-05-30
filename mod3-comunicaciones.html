@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 3: Comunicaciones Industriales | STM32N6 Industrial Academy</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d29;--accent:#f59e0b;--success:#10b981;--danger:#ef4444;--text:#e5e7eb;--text2:#9ca3af;--border:#2d3142;--code:#0d0f17;--blue:#3b82f6;--purple:#8b5cf6}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:0}
+.container{max-width:900px;margin:0 auto;padding:20px}
+header{text-align:center;padding:40px 20px 20px;border-bottom:1px solid var(--border);margin-bottom:20px;position:relative}
+header h1{font-size:2rem;font-weight:700;margin-bottom:8px;color:var(--text)}
+header .subtitle{color:var(--text2);font-size:1.05rem;margin-bottom:12px}
+.badge{display:inline-block;background:linear-gradient(135deg,var(--accent),#d97706);color:#000;font-size:.75rem;font-weight:700;padding:4px 14px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
+.progress-bar{width:100%;height:8px;background:var(--card);border-radius:4px;margin:24px 0;overflow:hidden;border:1px solid var(--border)}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#d97706);border-radius:4px;transition:width .5s ease}
+.card{background:var(--card);border-radius:12px;padding:24px;margin-bottom:24px;border:1px solid var(--border);transition:border-color .2s}
+.card:hover{border-color:#3d4260}
+.lesson-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.lesson-number{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#d97706);color:#000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0}
+h2{font-size:1.35rem;font-weight:600;color:var(--text);margin-bottom:12px}
+h3{font-size:1.1rem;font-weight:600;color:var(--accent);margin:20px 0 10px}
+h4{font-size:.95rem;font-weight:600;color:var(--text2);margin:16px 0 8px}
+p{margin-bottom:12px;color:var(--text2);font-size:.92rem}
+ul,ol{margin:12px 0 12px 22px;color:var(--text2);font-size:.9rem}
+li{margin-bottom:6px}
+strong{color:var(--text)}
+.highlight{background:rgba(245,158,11,.12);padding:2px 6px;border-radius:4px;color:var(--accent);font-weight:600}
+.code-block{background:var(--code);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:18px 20px;margin:16px 0;overflow-x:auto;font-family:'Fira Code','Consolas',monospace;font-size:.82rem;line-height:1.6;color:#c9d1d9}
+.code-block .keyword{color:#ff7b72}
+.code-block .type{color:#79c0ff}
+.code-block .func{color:#d2a8ff}
+.code-block .comment{color:#8b949e;font-style:italic}
+.code-block .macro{color:#79c0ff;font-weight:700}
+.code-block .string{color:#a5d6ff}
+.code-block .num{color:#79c0ff}
+.frame-capture{background:#000;border:1px solid var(--border);border-radius:10px;padding:20px;margin:16px 0;font-family:'Fira Code','Consolas',monospace;font-size:.8rem;line-height:1.7;overflow-x:auto}
+.frame-capture .ts{color:var(--text2);font-weight:600}
+.frame-capture .dir-tx{color:var(--accent);font-weight:700}
+.frame-capture .dir-rx{color:var(--success);font-weight:700}
+.frame-capture .hex-byte{color:#79c0ff}
+.frame-capture .field-slave{color:#ff7b72}
+.frame-capture .field-func{color:#d2a8ff}
+.frame-capture .field-data{color:var(--success)}
+.frame-capture .field-crc{color:var(--danger)}
+.frame-capture .label{color:var(--text2);font-size:.78rem}
+.frame-capture .annot{border-left:2px solid var(--border);padding-left:10px;margin:2px 0 2px 60px;color:var(--text2);font-size:.78rem}
+.terminal{background:#000;border:1px solid var(--border);border-radius:10px;margin:16px 0;overflow:hidden}
+.terminal-header{background:var(--card);padding:8px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.terminal-dot{width:12px;height:12px;border-radius:50%}
+.terminal-dot.red{background:var(--danger)}
+.terminal-dot.yellow{background:var(--accent)}
+.terminal-dot.green{background:var(--success)}
+.terminal-title{font-size:.8rem;color:var(--text2);margin-left:4px}
+.terminal-body{padding:16px;height:380px;overflow-y:auto;font-family:'Fira Code','Consolas',monospace;font-size:.82rem;line-height:1.7;color:var(--text)}
+.terminal-output{margin-bottom:8px;white-space:pre-wrap;word-break:break-all}
+.terminal-line{display:flex;align-items:center;gap:8px}
+.terminal-prompt{color:var(--accent);font-weight:700;white-space:nowrap}
+.terminal-input{background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;font-size:.82rem;flex:1;caret-color:var(--accent)}
+.cursor{display:inline-block;width:8px;height:16px;background:var(--accent);animation:blink 1s step-end infinite;vertical-align:middle}
+@keyframes blink{50%{opacity:0}}
+.quiz-container{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:16px 0}
+.quiz-question{font-weight:600;color:var(--text);margin-bottom:16px;font-size:1rem}
+.quiz-option{display:block;width:100%;text-align:left;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;color:var(--text);cursor:pointer;font-size:.9rem;transition:all .2s}
+.quiz-option:hover{border-color:var(--accent);background:rgba(245,158,11,.08)}
+.quiz-option.correct{background:rgba(16,185,129,.15);border-color:var(--success);color:var(--success)}
+.quiz-option.wrong{background:rgba(239,68,68,.15);border-color:var(--danger);color:var(--danger)}
+.quiz-option:disabled{cursor:not-allowed;opacity:.7}
+.quiz-feedback{margin-top:12px;padding:12px;border-radius:8px;font-size:.9rem;display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback.correct{background:rgba(16,185,129,.12);border:1px solid var(--success);color:var(--success)}
+.quiz-feedback.wrong{background:rgba(239,68,68,.12);border:1px solid var(--danger);color:var(--danger)}
+.tag{display:inline-block;padding:2px 10px;border-radius:6px;font-size:.78rem;font-weight:600;margin-right:6px;margin-bottom:4px}
+.tag-green{background:rgba(16,185,129,.15);color:var(--success);border:1px solid rgba(16,185,129,.3)}
+.tag-orange{background:rgba(245,158,11,.15);color:var(--accent);border:1px solid rgba(245,158,11,.3)}
+.tag-blue{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3)}
+.tag-purple{background:rgba(139,92,246,.15);color:var(--purple);border:1px solid rgba(139,92,246,.3)}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.info-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px}
+.info-item-label{font-size:.78rem;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.info-item-value{font-size:1.1rem;font-weight:700;color:var(--accent)}
+.diagram{text-align:center;font-family:'Fira Code','Consolas',monospace;font-size:.8rem;color:var(--text2);line-height:1.8;padding:16px;background:var(--code);border-radius:8px;overflow-x:auto;margin:16px 0}
+.can-node{display:inline-block;border:2px solid var(--accent);border-radius:8px;padding:6px 16px;margin:4px;font-weight:700;color:var(--accent)}
+.can-node.master{border-color:var(--danger);color:var(--danger)}
+.can-bus{height:3px;background:var(--accent);margin:8px 0;position:relative}
+.note{background:rgba(59,130,246,.08);border-left:4px solid var(--blue);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.88rem;color:var(--text2)}
+.warning{background:rgba(239,68,68,.08);border-left:4px solid var(--danger);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.88rem;color:var(--text2)}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.85rem}
+th,td{padding:10px 12px;text-align:left;border:1px solid var(--border)}
+th{background:var(--code);color:var(--accent);font-weight:600}
+td{color:var(--text2)}
+tr:nth-child(even){background:rgba(255,255,255,.02)}
+.nav-dots{display:flex;justify-content:center;gap:6px;margin:20px 0}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s}
+.nav-dot.active{background:var(--accent);width:24px;border-radius:4px}
+footer{text-align:center;padding:30px 20px;color:var(--text2);font-size:.8rem;border-top:1px solid var(--border);margin-top:40px}
+.section-title{font-size:1.5rem;font-weight:700;text-align:center;margin:40px 0 20px;padding-bottom:12px;border-bottom:2px solid var(--accent);display:inline-block;width:100%}
+@media(max-width:600px){.container{padding:12px}header h1{font-size:1.5rem}.card{padding:16px}.terminal-body{height:300px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>Módulo 3: Comunicaciones Industriales</h1>
+<div class="subtitle">STM32N6 Industrial Academy &mdash; Protocolos UART, RS-485, Modbus RTU, CAN Bus y MQTT</div>
+<span class="badge">Avanzado</span>
+</header>
+
+<div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
+
+<!-- ==================== LECCION 1 ==================== -->
+<div class="card" id="lesson1">
+<div class="lesson-header"><div class="lesson-number">1</div><h2>UART Configuración para RS-485</h2></div>
+
+<h3>Introducción a RS-485</h3>
+<p>RS-485 es un estándar de comunicación serial <strong>diferencial</strong> ampliamente utilizado en entornos industriales por su robustez contra ruido electromagnético y su capacidad de comunicación a largas distancias.</p>
+
+<div class="info-grid">
+<div class="info-item"><div class="info-item-label">Distancia Máxima</div><div class="info-item-value">1200 m</div></div>
+<div class="info-item"><div class="info-item-label">Dispositivos/Bus</div><div class="info-item-value">32</div></div>
+<div class="info-item"><div class="info-item-label">Modo</div><div class="info-item-value">Half-Duplex</div></div>
+<div class="info-item"><div class="info-item-label">Topología</div><div class="info-item-value">Bus Diferencial</div></div>
+</div>
+
+<p>En modo <strong>half-duplex</strong>, los dispositivos comparten el mismo par de cables (A/B) tanto para transmitir como para recibir. Esto requiere control explícito de la dirección de comunicación mediante los pines <span class="highlight">DE</span> (Driver Enable) y <span class="highlight">RE</span> (Receiver Enable), típicamente unidos y controlados por un único GPIO.</p>
+
+<h3>Control de Dirección con GPIO</h3>
+<p>El pin PA1 se configura como salida y controla simultáneamente DE y RE (conectados juntos):</p>
+<ul>
+<li><strong>PA1 = HIGH</strong> &rarr; Transceptor en modo TX (Driver habilitado, Receptor deshabilitado)</li>
+<li><strong>PA1 = LOW</strong> &rarr; Transceptor en modo RX (Driver deshabilitado, Receptor habilitado)</li>
+</ul>
+
+<h3>Código HAL — Inicialización UART para RS-485</h3>
+<div class="code-block">
+<span class="comment">/* uart_rs485.h - Configuracion UART para RS-485 */</span><br>
+<span class="macro">#ifndef __UART_RS485_H</span><br>
+<span class="macro">#define __UART_RS485_H</span><br><br>
+<span class="macro">#include "stm32n6xx_hal.h"</span><br><br>
+<span class="comment">/* USART2 - PA2 (TX), PA3 (RX), PA1 (DE/RE) */</span><br>
+<span class="macro">#define RS485_USART&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;USART2</span><br>
+<span class="macro">#define RS485_DE_PORT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GPIOA</span><br>
+<span class="macro">#define RS485_DE_PIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GPIO_PIN_1</span><br>
+<span class="macro">#define RS485_TX_PORT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GPIOA</span><br>
+<span class="macro">#define RS485_TX_PIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GPIO_PIN_2</span><br>
+<span class="macro">#define RS485_RX_PORT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GPIOA</span><br>
+<span class="macro">#define RS485_RX_PIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GPIO_PIN_3</span><br>
+<span class="macro">#define RS485_BAUDRATE&nbsp;&nbsp;&nbsp;&nbsp;9600</span><br><br>
+<span class="type">UART_HandleTypeDef</span> <span class="func">huart2</span>;<br><br>
+<span class="type">void</span> <span class="func">RS485_Init</span>(<span class="type">void</span>);<br>
+<span class="type">HAL_StatusTypeDef</span> <span class="func">RS485_Send</span>(<span class="type">uint8_t</span> *data, <span class="type">uint16_t</span> len, <span class="type">uint32_t</span> timeout);<br>
+<span class="type">HAL_StatusTypeDef</span> <span class="func">RS485_Receive</span>(<span class="type">uint8_t</span> *buffer, <span class="type">uint16_t</span> len, <span class="type">uint32_t</span> timeout);<br>
+<span class="type">void</span> <span class="func">RS485_SetDirection</span>(<span class="type">uint8_t</span> tx_mode);<br><br>
+<span class="macro">#endif</span>
+</div>
+
+<h3>Código HAL — Implementación RS485_Send() y RS485_Receive()</h3>
+<div class="code-block">
+<span class="comment">/* uart_rs485.c */</span><br>
+<span class="macro">#include "uart_rs485.h"</span><br><br>
+<span class="type">void</span> <span class="func">RS485_Init</span>(<span class="type">void</span>) {<br>
+&emsp;&emsp;<span class="type">GPIO_InitTypeDef</span> GPIO_InitStruct = {<span class="num">0</span>};<br><br>
+&emsp;&emsp;<span class="comment">/* Habilitar relojes */</span><br>
+&emsp;&emsp;<span class="func">__HAL_RCC_USART2_CLK_ENABLE</span>();<br>
+&emsp;&emsp;<span class="func">__HAL_RCC_GPIOA_CLK_ENABLE</span>();<br><br>
+&emsp;&emsp;<span class="comment">/* PA2 = TX, PA3 = RX como AF */</span><br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Pin</span> = RS485_TX_PIN | RS485_RX_PIN;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Mode</span> = GPIO_MODE_AF_PP;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Pull</span> = GPIO_PULLUP;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Speed</span> = GPIO_SPEED_FREQ_LOW;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Alternate</span> = GPIO_AF7_USART2;<br>
+&emsp;&emsp;<span class="func">HAL_GPIO_Init</span>(RS485_TX_PORT, &amp;GPIO_InitStruct);<br><br>
+&emsp;&emsp;<span class="comment">/* PA1 = DE/RE como salida push-pull */</span><br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Pin</span> = RS485_DE_PIN;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Mode</span> = GPIO_MODE_OUTPUT_PP;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Alternate</span> = <span class="num">0</span>;<br>
+&emsp;&emsp;<span class="func">HAL_GPIO_Init</span>(RS485_DE_PORT, &amp;GPIO_InitStruct);<br>
+&emsp;&emsp;<span class="func">HAL_GPIO_WritePin</span>(RS485_DE_PORT, RS485_DE_PIN, GPIO_PIN_RESET);<br><br>
+&emsp;&emsp;<span class="comment">/* Configurar USART2: 9600 baud, 8N1 */</span><br>
+&emsp;&emsp;huart2.<span class="func">Instance</span> = RS485_USART;<br>
+&emsp;&emsp;huart2.<span class="func">Init</span>.<span class="func">BaudRate</span> = RS485_BAUDRATE;<br>
+&emsp;&emsp;huart2.<span class="func">Init</span>.<span class="func">WordLength</span> = UART_WORDLENGTH_8B;<br>
+&emsp;&emsp;huart2.<span class="func">Init</span>.<span class="func">StopBits</span> = UART_STOPBITS_1;<br>
+&emsp;&emsp;huart2.<span class="func">Init</span>.<span class="func">Parity</span> = UART_PARITY_NONE;<br>
+&emsp;&emsp;huart2.<span class="func">Init</span>.<span class="func">Mode</span> = UART_MODE_TX_RX;<br>
+&emsp;&emsp;<span class="func">HAL_UART_Init</span>(&amp;huart2);<br><br>
+&emsp;&emsp;<span class="comment">/* Habilitar interrupciones de error */</span><br>
+&emsp;&emsp;<span class="func">__HAL_UART_ENABLE_IT</span>(&amp;huart2, UART_IT_ERR);<br>
+}<br><br>
+<span class="type">void</span> <span class="func">RS485_SetDirection</span>(<span class="type">uint8_t</span> tx_mode) {<br>
+&emsp;&emsp;<span class="func">HAL_GPIO_WritePin</span>(RS485_DE_PORT, RS485_DE_PIN,<br>
+&emsp;&emsp;&emsp;&emsp;tx_mode ? GPIO_PIN_SET : GPIO_PIN_RESET);<br>
+&emsp;&emsp;<span class="keyword">if</span> (tx_mode) <span class="func">HAL_Delay</span>(<span class="num">1</span>); <span class="comment">/* Delay turn-around */</span><br>
+}<br><br>
+<span class="type">HAL_StatusTypeDef</span> <span class="func">RS485_Send</span>(<span class="type">uint8_t</span> *data, <span class="type">uint16_t</span> len, <span class="type">uint32_t</span> timeout) {<br>
+&emsp;&emsp;<span class="type">HAL_StatusTypeDef</span> status;<br>
+&emsp;&emsp;<span class="func">RS485_SetDirection</span>(<span class="num">1</span>); <span class="comment">/* Modo TX */</span><br>
+&emsp;&emsp;status = <span class="func">HAL_UART_Transmit</span>(&amp;huart2, data, len, timeout);<br>
+&emsp;&emsp;<span class="keyword">while</span> (<span class="func">__HAL_UART_GET_FLAG</span>(&amp;huart2, UART_FLAG_TC) == RESET);<br>
+&emsp;&emsp;<span class="func">RS485_SetDirection</span>(<span class="num">0</span>); <span class="comment">/* Modo RX */</span><br>
+&emsp;&emsp;<span class="keyword">return</span> status;<br>
+}<br><br>
+<span class="type">HAL_StatusTypeDef</span> <span class="func">RS485_Receive</span>(<span class="type">uint8_t</span> *buffer, <span class="type">uint16_t</span> len, <span class="type">uint32_t</span> timeout) {<br>
+&emsp;&emsp;<span class="type">HAL_StatusTypeDef</span> status;<br>
+&emsp;&emsp;<span class="func">RS485_SetDirection</span>(<span class="num">0</span>); <span class="comment">/* Asegurar modo RX */</span><br>
+&emsp;&emsp;status = <span class="func">HAL_UART_Receive</span>(&amp;huart2, buffer, len, timeout);<br>
+&emsp;&emsp;<span class="keyword">if</span> (status == HAL_TIMEOUT) <span class="keyword">return</span> HAL_TIMEOUT;<br>
+&emsp;&emsp;<span class="keyword">return</span> status;<br>
+}
+</div>
+
+<h3>Manejo de Errores</h3>
+<div class="code-block">
+<span class="type">void</span> <span class="func">HAL_UART_ErrorCallback</span>(<span class="type">UART_HandleTypeDef</span> *huart) {<br>
+&emsp;&emsp;<span class="keyword">if</span> (huart-&gt;Instance == RS485_USART) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">uint32_t</span> err = <span class="func">HAL_UART_GetError</span>(huart);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">if</span> (err &amp; HAL_UART_ERROR_FE)<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[ERROR] Framing Error\n"</span>);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">if</span> (err &amp; HAL_UART_ERROR_ORE)<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[ERROR] Overrun Error\n"</span>);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">if</span> (err &amp; HAL_UART_ERROR_NE)<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[ERROR] Noise Error\n"</span>);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">__HAL_UART_CLEAR_OREFLAG</span>(huart);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">__HAL_UART_CLEAR_FEFLAG</span>(huart);<br>
+&emsp;&emsp;}<br>
+}
+</div>
+
+<h3>Captura de Trama RS-485 / Modbus RTU</h3>
+<div class="frame-capture">
+<span class="ts">[  0.023]</span> <span class="dir-tx">TX &rarr;</span> <span class="field-slave">01</span> <span class="field-func">03</span> <span class="field-data">00 00</span> <span class="field-data">00 02</span> <span class="field-crc">C4 0B</span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">CRC low byte: 0x0B</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">CRC high byte: 0xC4 (calculado con Modbus CRC-16)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Cantidad de registros a leer: 2 (big-endian)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Dirección de inicio alta: 0x00</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Dirección de inicio baja: 0x00 (registro #0)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-func">Función 0x03 = Read Holding Registers</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-slave">Dirección del esclavo: 0x01</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="dir-tx">[TX] Transmisión maestra</span></span><br><br>
+<span class="ts">[  0.089]</span> <span class="dir-rx">RX &larr;</span> <span class="field-slave">01</span> <span class="field-func">03</span> <span class="field-data">04</span> <span class="field-data">00 0A</span> <span class="field-data">00 14</span> <span class="field-crc">BA 89</span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">CRC: 0x89BA</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Dato registro[1]: 0x0014 = 20</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Dato registro[0]: 0x000A = 10</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Byte count: 4 bytes (2 registros x 2 bytes)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-func">Función 0x03 = Read Holding Registers (respuesta)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-slave">Dirección del esclavo: 0x01</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="dir-rx">[RX] Respuesta del esclavo</span></span><br>
+</div>
+
+<div class="note">
+<strong>Nota:</strong> El CRC-16 Modbus se calcula sobre todos los bytes excepto los del propio CRC. El polinomio es <code>0xA001</code> (inicial <code>0xFFFF</code>). El byte menos significativo del CRC se transmite primero (little-endian).
+</div>
+</div>
+
+<!-- ==================== LECCION 2 ==================== -->
+<div class="card" id="lesson2">
+<div class="lesson-header"><div class="lesson-number">2</div><h2>Modbus RTU Maestro/Esclavo</h2></div>
+
+<h3>Protocolo Modbus RTU</h3>
+<p>Modbus RTU (Remote Terminal Unit) es el protocolo de comunicación industrial más extendido. Opera sobre RS-485 en modo <strong>maestro-esclavo</strong>: un único maestro inicia todas las comunicaciones y los esclavos responden únicamente cuando son direccionados.</p>
+
+<h4>Estructura de Trama Modbus RTU</h4>
+<table>
+<tr><th>Campo</th><th>Tamaño</th><th>Descripción</th></tr>
+<tr><td>Dirección del esclavo</td><td>1 byte</td><td>1-247 (0 = broadcast)</td></tr>
+<tr><td>Código de función</td><td>1 byte</td><td>Operación a realizar</td></tr>
+<tr><td>Datos</td><td>N bytes</td><td>Depende de la función</td></tr>
+<tr><td>CRC-16</td><td>2 bytes</td><td>LSB primero</td></tr>
+</table>
+
+<h4>Códigos de Función Principales</h4>
+<table>
+<tr><th>Código</th><th>Nombre</th><th>Descripción</th></tr>
+<tr><td><span class="tag tag-green">0x01</span></td><td>Read Coils</td><td>Lee 1-2000 coils (salidas digitales)</td></tr>
+<tr><td><span class="tag tag-green">0x03</span></td><td>Read Holding Registers</td><td>Lee 1-125 registros de 16 bits</td></tr>
+<tr><td><span class="tag tag-blue">0x05</span></td><td>Write Single Coil</td><td>Escribe un coil individual</td></tr>
+<tr><td><span class="tag tag-blue">0x06</span></td><td>Write Single Register</td><td>Escribe un holding register</td></tr>
+<tr><td><span class="tag tag-purple">0x10</span></td><td>Write Multiple Registers</td><td>Escribe 1-123 registros (Func. 16)</td></tr>
+</table>
+
+<div class="warning">
+<strong>Excepciones:</strong> Si un esclavo no puede procesar la petición, responde con el código de función <strong>OR 0x80</strong>. Ej: función 0x03 &rarr; excepción 0x83. El siguiente byte es el código de excepción (0x01=función ilegal, 0x02=dirección ilegal, 0x03=valor ilegal).
+</div>
+
+<h3>Implementación — Cálculo de CRC-16 Modbus</h3>
+<div class="code-block">
+<span class="comment">/* modbus_crc.c - Calculo de CRC-16 Modbus */</span><br>
+<span class="macro">#include &lt;stdint.h&gt;</span><br><br>
+<span class="type">uint16_t</span> <span class="func">modbus_crc16</span>(<span class="type">uint8_t</span> *data, <span class="type">uint16_t</span> len) {<br>
+&emsp;&emsp;<span class="type">uint16_t</span> crc = <span class="num">0xFFFF</span>;<br>
+&emsp;&emsp;<span class="keyword">for</span> (<span class="type">uint16_t</span> i = <span class="num">0</span>; i &lt; len; i++) {<br>
+&emsp;&emsp;&emsp;&emsp;crc ^= (<span class="type">uint16_t</span>)data[i];<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">for</span> (<span class="type">uint8_t</span> j = <span class="num">0</span>; j &lt; <span class="num">8</span>; j++) {<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="keyword">if</span> (crc &amp; <span class="num">0x0001</span>)<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;crc = (crc &gt;&gt; <span class="num">1</span>) ^ <span class="num">0xA001</span>;<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="keyword">else</span><br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;crc &gt;&gt;= <span class="num">1</span>;<br>
+&emsp;&emsp;&emsp;&emsp;}<br>
+&emsp;&emsp;}<br>
+&emsp;&emsp;<span class="keyword">return</span> crc; <span class="comment">/* LSB primero en transmision */</span><br>
+}
+</div>
+
+<h3>Implementación — Modbus Maestro</h3>
+<div class="code-block">
+<span class="comment">/* modbus_master.c - Implementacion Maestro Modbus RTU */</span><br>
+<span class="macro">#include "modbus_master.h"</span><br>
+<span class="macro">#include "uart_rs485.h"</span><br><br>
+<span class="macro">#define MODBUS_MASTER_TIMEOUT&nbsp;&nbsp;500&nbsp;&nbsp;/* ms */</span><br>
+<span class="macro">#define MODBUS_MAX_RESP_SIZE&nbsp;&nbsp;&nbsp;256</span><br><br>
+<span class="comment">/*
+&ensp;* modbus_read_holding_registers
+&ensp;* Lee 'count' registros del esclavo 'addr' desde 'reg_addr'
+&ensp;* @return: numero de bytes recibidos en respuesta, o -1 en error
+ */</span><br>
+<span class="type">int</span> <span class="func">modbus_read_holding_registers</span>(<span class="type">uint8_t</span> slave_addr,<br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">uint16_t</span> reg_addr, <span class="type">uint16_t</span> count,<br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">uint8_t</span> *out_buffer) {<br><br>
+&emsp;&emsp;<span class="type">uint8_t</span> tx_frame[<span class="num">8</span>];<br>
+&emsp;&emsp;<span class="type">uint8_t</span> rx_buffer[MODBUS_MAX_RESP_SIZE];<br>
+&emsp;&emsp;<span class="type">uint16_t</span> crc;<br><br>
+&emsp;&emsp;<span class="keyword">if</span> (count &lt; <span class="num">1</span> || count &gt; <span class="num">125</span>) <span class="keyword">return</span> -<span class="num">1</span>;<br><br>
+&emsp;&emsp;<span class="comment">/* Construir trama de peticion */</span><br>
+&emsp;&emsp;tx_frame[<span class="num">0</span>] = slave_addr;<br>
+&emsp;&emsp;tx_frame[<span class="num">1</span>] = <span class="num">0x03</span>; <span class="comment">/* Read Holding Registers */</span><br>
+&emsp;&emsp;tx_frame[<span class="num">2</span>] = (reg_addr &gt;&gt; <span class="num">8</span>) &amp; <span class="num">0xFF</span>; <span class="comment">/* Addr HI */</span><br>
+&emsp;&emsp;tx_frame[<span class="num">3</span>] = reg_addr &amp; <span class="num">0xFF</span>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* Addr LO */</span><br>
+&emsp;&emsp;tx_frame[<span class="num">4</span>] = (count &gt;&gt; <span class="num">8</span>) &amp; <span class="num">0xFF</span>;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* Count HI */</span><br>
+&emsp;&emsp;tx_frame[<span class="num">5</span>] = count &amp; <span class="num">0xFF</span>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* Count LO */</span><br><br>
+&emsp;&emsp;<span class="comment">/* Calcular y anexar CRC */</span><br>
+&emsp;&emsp;crc = <span class="func">modbus_crc16</span>(tx_frame, <span class="num">6</span>);<br>
+&emsp;&emsp;tx_frame[<span class="num">6</span>] = crc &amp; <span class="num">0xFF</span>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* CRC LSB */</span><br>
+&emsp;&emsp;tx_frame[<span class="num">7</span>] = (crc &gt;&gt; <span class="num">8</span>) &amp; <span class="num">0xFF</span>; <span class="comment">/* CRC MSB */</span><br><br>
+&emsp;&emsp;<span class="comment">/* Enviar trama */</span><br>
+&emsp;&emsp;<span class="keyword">if</span> (<span class="func">RS485_Send</span>(tx_frame, <span class="num">8</span>, MODBUS_MASTER_TIMEOUT) != HAL_OK)<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">return</span> -<span class="num">1</span>;<br><br>
+&emsp;&emsp;<span class="comment">/* Esperar respuesta: header (3 bytes) + datos (count*2) + CRC (2) */</span><br>
+&emsp;&emsp;<span class="type">uint16_t</span> expected_len = <span class="num">3</span> + (count * <span class="num">2</span>) + <span class="num">2</span>;<br>
+&emsp;&emsp;<span class="type">int</span> rx_len = <span class="num">0</span>;<br>
+&emsp;&emsp;<span class="keyword">for</span> (<span class="type">int</span> retry = <span class="num">0</span>; retry &lt; <span class="num">3</span>; retry++) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">HAL_StatusTypeDef</span> st = <span class="func">RS485_Receive</span>(rx_buffer,<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;expected_len, MODBUS_MASTER_TIMEOUT);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">if</span> (st == HAL_OK) { rx_len = expected_len; <span class="keyword">break</span>; }<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">if</span> (st == HAL_TIMEOUT) <span class="keyword">continue</span>;<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">return</span> -<span class="num">1</span>;<br>
+&emsp;&emsp;}<br><br>
+&emsp;&emsp;<span class="keyword">if</span> (rx_len == <span class="num">0</span>) <span class="keyword">return</span> -<span class="num">1</span>;<br><br>
+&emsp;&emsp;<span class="comment">/* Verificar CRC de respuesta */</span><br>
+&emsp;&emsp;<span class="type">uint16_t</span> rx_crc = (<span class="type">uint16_t</span>)rx_buffer[rx_len-<span class="num">1</span>] &lt;&lt; <span class="num">8</span><br>
+&emsp;&emsp;&emsp;&emsp;| rx_buffer[rx_len-<span class="num">2</span>];<br>
+&emsp;&emsp;<span class="type">uint16_t</span> calc_crc = <span class="func">modbus_crc16</span>(rx_buffer, rx_len - <span class="num">2</span>);<br>
+&emsp;&emsp;<span class="keyword">if</span> (rx_crc != calc_crc) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[MB] CRC error: RX=%04X CALC=%04X\n"</span>, rx_crc, calc_crc);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">return</span> -<span class="num">1</span>;<br>
+&emsp;&emsp;}<br><br>
+&emsp;&emsp;<span class="comment">/* Verificar excepcion */</span><br>
+&emsp;&emsp;<span class="keyword">if</span> (rx_buffer[<span class="num">1</span>] &amp; <span class="num">0x80</span>) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[MB] Exception %02X\n"</span>, rx_buffer[<span class="num">2</span>]);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">return</span> -<span class="num">1</span>;<br>
+&emsp;&emsp;}<br><br>
+&emsp;&emsp;<span class="comment">/* Copiar datos al buffer de salida (sin header ni CRC) */</span><br>
+&emsp;&emsp;<span class="type">uint8_t</span> data_bytes = rx_buffer[<span class="num">2</span>]; <span class="comment">/* byte count */</span><br>
+&emsp;&emsp;<span class="func">memcpy</span>(out_buffer, &amp;rx_buffer[<span class="num">3</span>], data_bytes);<br>
+&emsp;&emsp;<span class="keyword">return</span> data_bytes;<br>
+}
+</div>
+
+<h3>Implementación — Modbus Esclavo</h3>
+<div class="code-block">
+<span class="comment">/* modbus_slave.c - Implementacion Esclavo Modbus RTU */</span><br>
+<span class="macro">#include "modbus_slave.h"</span><br><br>
+<span class="macro">#define SLAVE_ADDRESS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x01</span><br>
+<span class="macro">#define MAX_HOLDING_REGS&nbsp;&nbsp;&nbsp;&nbsp;100</span><br><br>
+<span class="comment">/* Tabla de Holding Registers (valores iniciales) */</span><br>
+<span class="keyword">static</span> <span class="type">uint16_t</span> holding_registers[MAX_HOLDING_REGS] = {<br>
+&emsp;&emsp;<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>, <span class="num">60</span>, <span class="num">70</span>, <span class="num">80</span>, <span class="num">90</span>, <span class="num">100</span>,<br>
+&emsp;&emsp;<span class="num">0x1234</span>, <span class="num">0x5678</span>, <span class="num">0xABCD</span>, <span class="num">0x00FF</span>, <span class="num">0x0100</span>, <span class="num">0x0200</span><br>
+};<br><br>
+<span class="comment">/*
+&ensp;* modbus_slave_process - Parsea la trama recibida y genera respuesta
+&ensp;* @param rx_buf: buffer con la trama recibida
+&ensp;* @param rx_len: longitud de la trama recibida
+&ensp;* @param tx_buf: buffer para la respuesta (output)
+&ensp;* @return: longitud de la respuesta a enviar
+ */</span><br>
+<span class="type">uint16_t</span> <span class="func">modbus_slave_process</span>(<span class="type">uint8_t</span> *rx_buf, <span class="type">uint16_t</span> rx_len,<br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">uint8_t</span> *tx_buf) {<br><br>
+&emsp;&emsp;<span class="type">uint16_t</span> crc_rx, crc_calc;<br><br>
+&emsp;&emsp;<span class="keyword">if</span> (rx_len &lt; <span class="num">4</span>) <span class="keyword">return</span> <span class="num">0</span>; <span class="comment">/* Trama demasiado corta */</span><br><br>
+&emsp;&emsp;<span class="comment">/* Verificar direccion */</span><br>
+&emsp;&emsp;<span class="keyword">if</span> (rx_buf[<span class="num">0</span>] != SLAVE_ADDRESS &amp;&amp; rx_buf[<span class="num">0</span>] != <span class="num">0</span>) <span class="keyword">return</span> <span class="num">0</span>;<br><br>
+&emsp;&emsp;<span class="comment">/* Verificar CRC */</span><br>
+&emsp;&emsp;crc_rx = (<span class="type">uint16_t</span>)rx_buf[rx_len-<span class="num">1</span>] &lt;&lt; <span class="num">8</span> | rx_buf[rx_len-<span class="num">2</span>];<br>
+&emsp;&emsp;crc_calc = <span class="func">modbus_crc16</span>(rx_buf, rx_len - <span class="num">2</span>);<br>
+&emsp;&emsp;<span class="keyword">if</span> (crc_rx != crc_calc) <span class="keyword">return</span> <span class="num">0</span>;<br><br>
+&emsp;&emsp;<span class="type">uint8_t</span> function = rx_buf[<span class="num">1</span>];<br>
+&emsp;&emsp;<span class="type">uint16_t</span> addr = ((<span class="type">uint16_t</span>)rx_buf[<span class="num">2</span>] &lt;&lt; <span class="num">8</span>) | rx_buf[<span class="num">3</span>];<br><br>
+&emsp;&emsp;<span class="keyword">switch</span> (function) {<br><br>
+&emsp;&emsp;<span class="keyword">case</span> <span class="num">0x03</span>: { <span class="comment">/* Read Holding Registers */</span><br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">uint16_t</span> count = ((<span class="type">uint16_t</span>)rx_buf[<span class="num">4</span>] &lt;&lt; <span class="num">8</span>) | rx_buf[<span class="num">5</span>];<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">if</span> (addr + count &gt; MAX_HOLDING_REGS) {<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="keyword">return</span> <span class="func">build_exception</span>(tx_buf, function, <span class="num">0x02</span>);<br>
+&emsp;&emsp;&emsp;&emsp;}<br>
+&emsp;&emsp;&emsp;&emsp;tx_buf[<span class="num">0</span>] = SLAVE_ADDRESS;<br>
+&emsp;&emsp;&emsp;&emsp;tx_buf[<span class="num">1</span>] = <span class="num">0x03</span>;<br>
+&emsp;&emsp;&emsp;&emsp;tx_buf[<span class="num">2</span>] = count * <span class="num">2</span>; <span class="comment">/* byte count */</span><br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">for</span> (<span class="type">uint16_t</span> i = <span class="num">0</span>; i &lt; count; i++) {<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;tx_buf[<span class="num">3</span> + i*<span class="num">2</span>] = (holding_registers[addr+i] &gt;&gt; <span class="num">8</span>) &amp; <span class="num">0xFF</span>;<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;tx_buf[<span class="num">4</span> + i*<span class="num">2</span>] = holding_registers[addr+i] &amp; <span class="num">0xFF</span>;<br>
+&emsp;&emsp;&emsp;&emsp;}<br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">uint16_t</span> crc = <span class="func">modbus_crc16</span>(tx_buf, <span class="num">3</span> + count*<span class="num">2</span>);<br>
+&emsp;&emsp;&emsp;&emsp;tx_buf[<span class="num">3</span> + count*<span class="num">2</span>] = crc &amp; <span class="num">0xFF</span>;<br>
+&emsp;&emsp;&emsp;&emsp;tx_buf[<span class="num">4</span> + count*<span class="num">2</span>] = (crc &gt;&gt; <span class="num">8</span>) &amp; <span class="num">0xFF</span>;<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">return</span> <span class="num">5</span> + count*<span class="num">2</span>;<br>
+&emsp;&emsp;}<br><br>
+&emsp;&nbsp;<span class="keyword">case</span> <span class="num">0x06</span>: { <span class="comment">/* Write Single Register */</span><br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">uint16_t</span> value = ((<span class="type">uint16_t</span>)rx_buf[<span class="num">4</span>] &lt;&lt; <span class="num">8</span>) | rx_buf[<span class="num">5</span>];<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">if</span> (addr &gt;= MAX_HOLDING_REGS)<br>
+&emsp;&emsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="func">build_exception</span>(tx_buf, function, <span class="num">0x02</span>);<br>
+&emsp;&emsp;&emsp;&emsp;holding_registers[addr] = value;<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">memcpy</span>(tx_buf, rx_buf, <span class="num">6</span>); <span class="comment">/* Echo de la peticion */</span><br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">uint16_t</span> crc = <span class="func">modbus_crc16</span>(tx_buf, <span class="num">6</span>);<br>
+&emsp;&emsp;&emsp;&emsp;tx_buf[<span class="num">6</span>] = crc &amp; <span class="num">0xFF</span>;<br>
+&emsp;&emsp;&emsp;&emsp;tx_buf[<span class="num">7</span>] = (crc &gt;&gt; <span class="num">8</span>) &amp; <span class="num">0xFF</span>;<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">return</span> <span class="num">8</span>;<br>
+&emsp;&emsp;}<br><br>
+&emsp;&nbsp;<span class="keyword">default</span>:<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">return</span> <span class="func">build_exception</span>(tx_buf, function, <span class="num">0x01</span>);<br>
+&emsp;&emsp;}<br>
+}<br><br>
+<span class="keyword">static</span> <span class="type">uint16_t</span> <span class="func">build_exception</span>(<span class="type">uint8_t</span> *tx_buf,<br>
+&emsp;&emsp;<span class="type">uint8_t</span> function, <span class="type">uint8_t</span> code) {<br>
+&emsp;&emsp;tx_buf[<span class="num">0</span>] = SLAVE_ADDRESS;<br>
+&emsp;&emsp;tx_buf[<span class="num">1</span>] = function | <span class="num">0x80</span>;<br>
+&emsp;&emsp;tx_buf[<span class="num">2</span>] = code;<br>
+&emsp;&emsp;<span class="type">uint16_t</span> crc = <span class="func">modbus_crc16</span>(tx_buf, <span class="num">3</span>);<br>
+&emsp;&emsp;tx_buf[<span class="num">3</span>] = crc &amp; <span class="num">0xFF</span>;<br>
+&emsp;&emsp;tx_buf[<span class="num">4</span>] = (crc &gt;&gt; <span class="num">8</span>) &amp; <span class="num">0xFF</span>;<br>
+&emsp;&emsp;<span class="keyword">return</span> <span class="num">5</span>;<br>
+}
+</div>
+
+<h3>Captura de Trama Modbus — Lectura de 10 Registros</h3>
+<div class="frame-capture">
+<span class="ts">[  0.000]</span> <span class="dir-tx">TX &rarr;</span> <span class="field-slave">01</span> <span class="field-func">03</span> <span class="field-data">00 00</span> <span class="field-data">00 0A</span> <span class="field-crc">C5 CD</span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">CRC = 0xCDC5</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Cantidad de registros: 10 (0x000A)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Dirección de inicio: 0x0000</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-func">Función 0x03: Read Holding Registers</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-slave">Dirección esclavo: 0x01</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="dir-tx">[TX] Petición del maestro</span></span><br><br>
+<span class="ts">[  0.067]</span> <span class="dir-rx">RX &larr;</span> <span class="field-slave">01</span> <span class="field-func">03</span> <span class="field-data">14</span> <span class="field-data">00 01 00 02 00 03 00 04 00 05 00 06 00 07 00 08 00 09 00 0A</span> <span class="field-crc">7A 6F</span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">CRC = 0x6F7A</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Datos: 20 bytes = 10 registros (0x0001 .. 0x000A)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Byte count: 0x14 = 20 bytes</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-func">Función 0x03: Respuesta OK</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-slave">Dirección esclavo: 0x01</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="dir-rx">[RX] Respuesta del esclavo con 10 registros</span></span>
+</div>
+
+<h3>Captura de Trama — Excepción</h3>
+<div class="frame-capture">
+<span class="ts">[  2.450]</span> <span class="dir-tx">TX &rarr;</span> <span class="field-slave">01</span> <span class="field-func">03</span> <span class="field-data">00 80</span> <span class="field-data">00 01</span> <span class="field-crc">84 22</span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">CRC = 0x2284</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Leer 1 registro desde dirección 0x0080 (fuera de rango)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-func">Función 0x03</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="dir-tx">[TX] Petición inválida</span></span><br><br>
+<span class="ts">[  2.512]</span> <span class="dir-rx">RX &larr;</span> <span class="field-slave">01</span> <span class="field-crc">83</span> <span class="field-crc">02</span> <span class="field-crc">C0 F1</span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">CRC = 0xF1C0</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">Código de excepción 0x02 = ILLEGAL DATA ADDRESS</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">Función 0x83 = 0x03 | 0x80 (bit de excepción activo)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-slave">Dirección esclavo: 0x01</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="dir-rx">[RX] Respuesta de EXCEPCIÓN</span></span>
+</div>
+</div>
+
+<!-- ==================== LECCION 3 ==================== -->
+<div class="card" id="lesson3">
+<div class="lesson-header"><div class="lesson-number">3</div><h2>CAN Bus Industrial</h2></div>
+
+<h3>Introducción a CAN Bus</h3>
+<p>Controller Area Network (CAN) es un protocolo de comunicación serial desarrollado por Bosch en 1986. Es el estándar dominante en la industria automotriz y se extiende cada vez más a aplicaciones industriales (CANopen, DeviceNet) gracias a su alta confiabilidad y determinismo.</p>
+
+<div class="info-grid">
+<div class="info-item"><div class="info-item-label">Señalización</div><div class="info-item-value">Diferencial (CAN_H / CAN_L)</div></div>
+<div class="info-item"><div class="info-item-label">Máx. Nodos</div><div class="info-item-value">~110 (depende transceiver)</div></div>
+<div class="info-item"><div class="info-item-label">Distancia @125k</div><div class="info-item-value">~500 m</div></div>
+<div class="info-item"><div class="info-item-label">Arbitraje</div><div class="info-item-value">CSMA/CD+AMP</div></div>
+</div>
+
+<h4>Velocidades Estándar</h4>
+<table>
+<tr><th>Bitrate</th><th>Distancia Máx.</th><th>Aplicación Típica</th></tr>
+<tr><td><span class="tag tag-green">125 kbps</span></td><td>~500 m</td><td>Redes industriales largas</td></tr>
+<tr><td><span class="tag tag-orange">250 kbps</span></td><td>~250 m</td><td>CANopen, DeviceNet</td></tr>
+<tr><td><span class="tag tag-blue">500 kbps</span></td><td>~100 m</td><td>Automotriz, maquinaria</td></tr>
+<tr><td><span class="tag tag-purple">1 Mbps</span></td><td>~40 m</td><td>Redes de alta velocidad</td></tr>
+</table>
+
+<h3>Arbitraje por Prioridad (ID)</h3>
+<p>En CAN, los mensajes no se dirigen a un nodo específico sino que se <strong>difunden</strong> (broadcast) con un identificador único. Cada nodo decide si procesa el mensaje según su ID. Cuando dos nodos transmiten simultáneamente, gana el mensaje con el <strong>ID más bajo</strong> (mayor prioridad).</p>
+
+<div class="diagram">
+┌─────────────┐&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌─────────────┐&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌─────────────┐&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌─────────────┐<br>
+│&nbsp;&nbsp;Nodo Maestro&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;Sensor Temp&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;Actuador&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;Sensor Pres.│<br>
+│&nbsp;&nbsp;(ID 0x100)&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;(ID 0x200)&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;(ID 0x300)&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;(ID 0x201)&nbsp;&nbsp;│<br>
+└──────┬──────┘&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──────┬──────┘&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──────┬──────┘&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──────┬──────┘<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└───────────────────┴───────────────────┴───────────────────┘<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CAN_H ───────── CAN_L<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(Bus Diferencial con terminación 120Ω)<br><br>
+Prioridad:&nbsp;<span style="color:var(--danger)">0x100</span> &gt; 0x200 &gt; 0x201 &gt; 0x300 (menor ID = mayor prioridad)
+</div>
+
+<h3>Tipos de Frames CAN</h3>
+<table>
+<tr><th>Tipo</th><th>Descripción</th><th>Uso</th></tr>
+<tr><td><strong>Data Frame</strong></td><td>Transmisión de datos (0-8 bytes)</td><td>Mensajes periódicos de sensores/actuadores</td></tr>
+<tr><td><strong>Remote Frame</strong></td><td>Solicitud de datos (RTR=1, sin payload)</td><td>Pedido explícito de un mensaje</td></tr>
+<tr><td><strong>Error Frame</strong></td><td>Notificación de error detectado</td><td>Manejo automático de fallos</td></tr>
+<tr><td><strong>Overload Frame</strong></td><td>Retraso entre frames</td><td>Sincronización</td></tr>
+</table>
+
+<h3>Código HAL — Inicialización CAN (500 kbps)</h3>
+<div class="code-block">
+<span class="comment">/* can_bus.c - Inicializacion y manejo de CAN Bus */</span><br>
+<span class="macro">#include "can_bus.h"</span><br><br>
+<span class="type">CAN_HandleTypeDef</span> <span class="func">hcan1</span>;<br><br>
+<span class="comment">/*
+&ensp;* CAN_Init_500kbps - Configura CAN1 a 500 kbps
+&ensp;* Clock APB1 = 42 MHz
+&ensp;* Prescaler = 6, TBS1 = 11, TBS2 = 2
+&ensp;* Bitrate = 42MHz / (6 * (1+11+2)) = 42/84 = 500 kbps
+&ensp;* Sample Point = (1+11)/(1+11+2) = 85.7%
+ */</span><br>
+<span class="type">void</span> <span class="func">CAN_Init_500kbps</span>(<span class="type">void</span>) {<br>
+&emsp;&emsp;<span class="type">CAN_FilterTypeDef</span> can_filter;<br><br>
+&emsp;&emsp;<span class="func">__HAL_RCC_CAN1_CLK_ENABLE</span>();<br>
+&emsp;&emsp;<span class="func">__HAL_RCC_GPIOA_CLK_ENABLE</span>();<br><br>
+&emsp;&emsp;<span class="comment">/* PA11 = CAN1_RX, PA12 = CAN1_TX (Alternate Function 9) */</span><br>
+&emsp;&emsp;<span class="type">GPIO_InitTypeDef</span> GPIO_InitStruct = {<span class="num">0</span>};<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Pin</span> = GPIO_PIN_11 | GPIO_PIN_12;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Mode</span> = GPIO_MODE_AF_PP;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Pull</span> = GPIO_NOPULL;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Speed</span> = GPIO_SPEED_FREQ_VERY_HIGH;<br>
+&emsp;&emsp;GPIO_InitStruct.<span class="func">Alternate</span> = GPIO_AF9_CAN1;<br>
+&emsp;&emsp;<span class="func">HAL_GPIO_Init</span>(GPIOA, &amp;GPIO_InitStruct);<br><br>
+&emsp;&emsp;<span class="comment">/* Configurar CAN */</span><br>
+&emsp;&emsp;hcan1.<span class="func">Instance</span> = CAN1;<br>
+&emsp;&emsp;hcan1.<span class="func">Init</span>.<span class="func">Mode</span> = CAN_MODE_NORMAL;<br>
+&emsp;&emsp;hcan1.<span class="func">Init</span>.<span class="func">Prescaler</span> = <span class="num">6</span>;<br>
+&emsp;&emsp;hcan1.<span class="func">Init</span>.<span class="func">TimeSeg1</span> = CAN_BS1_11TQ;<br>
+&emsp;&emsp;hcan1.<span class="func">Init</span>.<span class="func">TimeSeg2</span> = CAN_BS2_2TQ;<br>
+&emsp;&emsp;hcan1.<span class="func">Init</span>.<span class="func">SyncJumpWidth</span> = CAN_SJW_1TQ;<br><br>
+&emsp;&emsp;<span class="comment">/* Modo automatico de retransmision */</span><br>
+&emsp;&emsp;hcan1.<span class="func">Init</span>.<span class="func">AutoRetransmission</span> = ENABLE;<br>
+&emsp;&emsp;hcan1.<span class="func">Init</span>.<span class="func">ReceiveFifoLocked</span> = DISABLE;<br>
+&emsp;&emsp;hcan1.<span class="func">Init</span>.<span class="func">TransmitFifoPriority</span> = DISABLE;<br><br>
+&emsp;&emsp;<span class="keyword">if</span> (<span class="func">HAL_CAN_Init</span>(&amp;hcan1) != HAL_OK) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">Error_Handler</span>();<br>
+&emsp;&emsp;}<br><br>
+&emsp;&emsp;<span class="comment">/* Configurar filtros: aceptar IDs 0x100 - 0x1FF */</span><br>
+&emsp;&emsp;can_filter.<span class="func">FilterBank</span> = <span class="num">0</span>;<br>
+&emsp;&emsp;can_filter.<span class="func">FilterMode</span> = CAN_FILTERMODE_IDMASK;<br>
+&emsp;&emsp;can_filter.<span class="func">FilterScale</span> = CAN_FILTERSCALE_32BIT;<br>
+&emsp;&emsp;can_filter.<span class="func">FilterFIFOAssignment</span> = CAN_FILTER_FIFO0;<br>
+&emsp;&emsp;can_filter.<span class="func">FilterActivation</span> = ENABLE;<br><br>
+&emsp;&emsp;<span class="comment">/*
+&ensp;&emsp;* ID deseado: 0x100 &lt;&lt; 5 (alineado a bit 21 del registro 32-bit)
+&ensp;&emsp;* 0x100 &lt;&lt; 5 = 0x00002000
+&ensp;&emsp;* Mascara: 0x1FF &lt;&lt; 5 = 0x00003FE0 (filtra bits 8-0 del ID)
+&ensp;&emsp;* Efecto: acepta IDs 0x100 a 0x1FF
+&ensp;&emsp;*/</span><br>
+&emsp;&emsp;can_filter.<span class="func">FilterIdHigh</span> = (<span class="num">0x100</span> &lt;&lt; <span class="num">5</span>) &gt;&gt; <span class="num">16</span>;&nbsp;&nbsp;<span class="comment">/* 0x0000 */</span><br>
+&emsp;&emsp;can_filter.<span class="func">FilterIdLow</span>&nbsp;&nbsp;= (<span class="num">0x100</span> &lt;&lt; <span class="num">5</span>) &amp; <span class="num">0xFFFF</span>;&nbsp;&nbsp;<span class="comment">/* 0x2000 */</span><br>
+&emsp;&emsp;can_filter.<span class="func">FilterMaskIdHigh</span> = (<span class="num">0x1FF</span> &lt;&lt; <span class="num">5</span>) &gt;&gt; <span class="num">16</span>;&nbsp;&nbsp;<span class="comment">/* 0x0000 */</span><br>
+&emsp;&emsp;can_filter.<span class="func">FilterMaskIdLow</span>&nbsp;&nbsp;= (<span class="num">0x1FF</span> &lt;&lt; <span class="num">5</span>) &amp; <span class="num">0xFFFF</span>;&nbsp;&nbsp;<span class="comment">/* 0x3FE0 */</span><br>
+&emsp;&emsp;can_filter.<span class="func">SlaveStartFilterBank</span> = <span class="num">14</span>;<br><br>
+&emsp;&emsp;<span class="keyword">if</span> (<span class="func">HAL_CAN_ConfigFilter</span>(&amp;hcan1, &amp;can_filter) != HAL_OK) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">Error_Handler</span>();<br>
+&emsp;&emsp;}<br><br>
+&emsp;&emsp;<span class="comment">/* Activar interrupcion de recepcion en FIFO0 */</span><br>
+&emsp;&emsp;<span class="keyword">if</span> (<span class="func">HAL_CAN_ActivateNotification</span>(&amp;hcan1,<br>
+&emsp;&emsp;&emsp;&emsp;CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">Error_Handler</span>();<br>
+&emsp;&emsp;}<br><br>
+&emsp;&emsp;<span class="comment">/* Iniciar CAN */</span><br>
+&emsp;&emsp;<span class="keyword">if</span> (<span class="func">HAL_CAN_Start</span>(&amp;hcan1) != HAL_OK) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">Error_Handler</span>();<br>
+&emsp;&emsp;}<br>
+}
+</div>
+
+<h3>Código HAL — Transmisión CAN</h3>
+<div class="code-block">
+<span class="comment">/* Transmisión de mensaje CAN */</span><br>
+<span class="type">uint8_t</span> <span class="func">CAN_Transmit</span>(<span class="type">uint32_t</span> id, <span class="type">uint8_t</span> *data, <span class="type">uint8_t</span> dlc) {<br>
+&emsp;&emsp;<span class="type">CAN_TxHeaderTypeDef</span> tx_header;<br>
+&emsp;&emsp;<span class="type">uint32_t</span> tx_mailbox;<br><br>
+&emsp;&emsp;<span class="comment">/* Configurar header del mensaje */</span><br>
+&emsp;&emsp;tx_header.<span class="func">StdId</span> = id;<br>
+&emsp;&emsp;tx_header.<span class="func">ExtId</span> = <span class="num">0</span>;<br>
+&emsp;&emsp;tx_header.<span class="func">IDE</span> = CAN_ID_STD;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* Identificador estandar (11 bits) */</span><br>
+&emsp;&emsp;tx_header.<span class="func">RTR</span> = CAN_RTR_DATA;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* Frame de datos */</span><br>
+&emsp;&emsp;tx_header.<span class="func">DLC</span> = dlc;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* Data Length Code (0-8) */</span><br>
+&emsp;&emsp;tx_header.<span class="func">TransmitGlobalTime</span> = DISABLE;<br><br>
+&emsp;&emsp;<span class="comment">/* Esperar mailbox disponible */</span><br>
+&emsp;&emsp;<span class="type">uint32_t</span> timeout = <span class="func">HAL_GetTick</span>() + <span class="num">100</span>;<br>
+&emsp;&emsp;<span class="keyword">while</span> (<span class="func">HAL_CAN_GetTxMailboxesFreeLevel</span>(&amp;hcan1) == <span class="num">0</span>) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">if</span> (<span class="func">HAL_GetTick</span>() &gt; timeout) <span class="keyword">return</span> <span class="num">1</span>; <span class="comment">/* Timeout */</span><br>
+&emsp;&emsp;}<br><br>
+&emsp;&emsp;<span class="keyword">if</span> (<span class="func">HAL_CAN_AddTxMessage</span>(&amp;hcan1, &amp;tx_header, data, &amp;tx_mailbox) != HAL_OK) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">return</span> <span class="num">2</span>; <span class="comment">/* Error */</span><br>
+&emsp;&emsp;}<br><br>
+&emsp;&emsp;<span class="keyword">return</span> <span class="num">0</span>; <span class="comment">/* OK */</span><br>
+}<br><br>
+<span class="comment">/* Ejemplo: enviar temperatura y presion */</span><br>
+<span class="type">void</span> <span class="func">CAN_Send_SensorData</span>(<span class="type">float</span> temp, <span class="type">float</span> pressure) {<br>
+&emsp;&emsp;<span class="type">uint8_t</span> data[<span class="num">8</span>];<br>
+&emsp;&emsp;<span class="type">int16_t</span> temp_int = (<span class="type">int16_t</span>)(temp * <span class="num">10.0f</span>);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* 0.1°C resolucion */</span><br>
+&emsp;&emsp;<span class="type">uint16_t</span> pres_int = (<span class="type">uint16_t</span>)(pressure * <span class="num">10.0f</span>); <span class="comment">/* 0.1 psi resolucion */</span><br><br>
+&emsp;&emsp;data[<span class="num">0</span>] = (<span class="type">uint8_t</span>)(temp_int &gt;&gt; <span class="num">8</span>);&nbsp;&nbsp;<span class="comment">/* Temp HI */</span><br>
+&emsp;&emsp;data[<span class="num">1</span>] = (<span class="type">uint8_t</span>)(temp_int &amp; <span class="num">0xFF</span>); <span class="comment">/* Temp LO */</span><br>
+&emsp;&emsp;data[<span class="num">2</span>] = (<span class="type">uint8_t</span>)(pres_int &gt;&gt; <span class="num">8</span>);&nbsp;&nbsp;<span class="comment">/* Pres HI */</span><br>
+&emsp;&emsp;data[<span class="num">3</span>] = (<span class="type">uint8_t</span>)(pres_int &amp; <span class="num">0xFF</span>); <span class="comment">/* Pres LO */</span><br>
+&emsp;&emsp;data[<span class="num">4</span>] = <span class="num">0x00</span>; data[<span class="num">5</span>] = <span class="num">0x00</span>;<br>
+&emsp;&emsp;data[<span class="num">6</span>] = <span class="num">0x00</span>; data[<span class="num">7</span>] = <span class="num">0x00</span>;<br><br>
+&emsp;&emsp;<span class="func">CAN_Transmit</span>(<span class="num">0x123</span>, data, <span class="num">8</span>);<br>
+}
+</div>
+
+<h3>Código HAL — Recepción CAN (Callback de Interrupción)</h3>
+<div class="code-block">
+<span class="comment">/* Callback cuando hay mensaje pendiente en FIFO0 */</span><br>
+<span class="type">void</span> <span class="func">HAL_CAN_RxFifo0MsgPendingCallback</span>(<span class="type">CAN_HandleTypeDef</span> *hcan) {<br>
+&emsp;&emsp;<span class="type">CAN_RxHeaderTypeDef</span> rx_header;<br>
+&emsp;&emsp;<span class="type">uint8_t</span> rx_data[<span class="num">8</span>];<br><br>
+&emsp;&emsp;<span class="keyword">if</span> (<span class="func">HAL_CAN_GetRxMessage</span>(hcan, CAN_RX_FIFO0,<br>
+&emsp;&emsp;&emsp;&emsp;&amp;rx_header, rx_data) == HAL_OK) {<br><br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[CAN] RX ID=0x%03X DLC=%d Data="</span>,<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;rx_header.<span class="func">StdId</span>, rx_header.<span class="func">DLC</span>);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; rx_header.<span class="func">DLC</span>; i++)<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"%02X "</span>, rx_data[i]);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"\n"</span>);<br><br>
+&emsp;&emsp;&emsp;&emsp;<span class="comment">/* Procesar según ID */</span><br>
+&emsp;&emsp;&emsp;&emsp;<span class="keyword">switch</span> (rx_header.<span class="func">StdId</span>) {<br>
+&emsp;&emsp;&emsp;&emsp;&nbsp;<span class="keyword">case</span> <span class="num">0x100</span>: <span class="comment">/* Comando de control */</span><br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="func">Process_ControlCommand</span>(rx_data, rx_header.<span class="func">DLC</span>);<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="keyword">break</span>;<br>
+&emsp;&emsp;&emsp;&emsp;&nbsp;<span class="keyword">case</span> <span class="num">0x200</span>: <span class="comment">/* Datos de sensor */</span><br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="func">Process_SensorData</span>(rx_data, rx_header.<span class="func">DLC</span>);<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="keyword">break</span>;<br>
+&emsp;&emsp;&emsp;&emsp;&nbsp;<span class="keyword">default</span>:<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[CAN] ID no manejado\n"</span>);<br>
+&emsp;&emsp;&emsp;&emsp;}<br>
+&emsp;&emsp;}<br>
+}<br><br>
+<span class="type">void</span> <span class="func">Process_SensorData</span>(<span class="type">uint8_t</span> *data, <span class="type">uint8_t</span> dlc) {<br>
+&emsp;&emsp;<span class="keyword">if</span> (dlc &gt;= <span class="num">4</span>) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">int16_t</span> temp = (<span class="type">int16_t</span>)((data[<span class="num">0</span>] &lt;&lt; <span class="num">8</span>) | data[<span class="num">1</span>]);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="type">uint16_t</span> pres = (<span class="type">uint16_t</span>)((data[<span class="num">2</span>] &lt;&lt; <span class="num">8</span>) | data[<span class="num">3</span>]);<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[CAN] Temp=%.1f C  Pres=%.1f psi\n"</span>,<br>
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;temp / <span class="num">10.0f</span>, pres / <span class="num">10.0f</span>);<br>
+&emsp;&emsp;}<br>
+}
+</div>
+
+<h3>Filtros de CAN: Modo MASK vs Modo LIST</h3>
+<div class="info-grid">
+<div class="info-item"><div class="info-item-label">Modo MASK</div><div class="info-item-value" style="font-size:.85rem">Filtro + Máscara (rango de IDs)</div></div>
+<div class="info-item"><div class="info-item-label">Modo LIST</div><div class="info-item-value" style="font-size:.85rem">IDs específicos (hasta 4 por filtro)</div></div>
+</div>
+
+<div class="code-block">
+<span class="comment">/* Ejemplo: Filtro en modo LIST (aceptar IDs específicos) */</span><br>
+<span class="type">void</span> <span class="func">CAN_Filter_ListMode</span>(<span class="type">void</span>) {<br>
+&emsp;&emsp;<span class="type">CAN_FilterTypeDef</span> cf;<br><br>
+&emsp;&emsp;cf.<span class="func">FilterBank</span> = <span class="num">1</span>;<br>
+&emsp;&emsp;cf.<span class="func">FilterMode</span> = CAN_FILTERMODE_IDLIST; <span class="comment">/* Modo lista */</span><br>
+&emsp;&emsp;cf.<span class="func">FilterScale</span> = CAN_FILTERSCALE_16BIT;<br>
+&emsp;&emsp;cf.<span class="func">FilterFIFOAssignment</span> = CAN_FILTER_FIFO1;<br>
+&emsp;&emsp;cf.<span class="func">FilterActivation</span> = ENABLE;<br><br>
+&emsp;&nbsp;<span class="comment">/* 4 IDs de 16-bit: 0x100, 0x101, 0x102, 0x103 */</span><br>
+&emsp;&nbsp;cf.<span class="func">FilterIdHigh</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="num">0x100</span> &lt;&lt; <span class="num">5</span>;<br>
+&emsp;&nbsp;cf.<span class="func">FilterIdLow</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="num">0x101</span> &lt;&lt; <span class="num">5</span>;<br>
+&emsp;&nbsp;cf.<span class="func">FilterMaskIdHigh</span> = <span class="num">0x102</span> &lt;&lt; <span class="num">5</span>;<br>
+&emsp;&nbsp;cf.<span class="func">FilterMaskIdLow</span>&nbsp;&nbsp;= <span class="num">0x103</span> &lt;&lt; <span class="num">5</span>;<br><br>
+&emsp;&nbsp;<span class="func">HAL_CAN_ConfigFilter</span>(&amp;hcan1, &amp;cf);<br>
+}
+</div>
+
+<h3>Captura de Tramas CAN</h3>
+<div class="frame-capture">
+<span class="ts">[  0.012]</span> <span class="dir-tx">TX &rarr;</span> ID=<span class="field-func">0x123</span> DLC=<span class="field-data">8</span> Data=<span class="field-data">00 FA 01 2C 00 00 00 00</span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Rellenos (bytes no usados)</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Presión = 0x012C = 300 = 30.0 psi</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Temperatura = 0x00FA = 250 = 25.0°C</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">DLC = 8 bytes de payload</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-func">ID 0x123 = Mensaje de sensor ambiental</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="dir-tx">[TX] Nodo emisor transmite al bus</span></span><br><br>
+<span class="ts">[  0.013]</span> <span class="dir-rx">RX &larr;</span> ID=<span class="field-func">0x123</span> DLC=<span class="field-data">8</span> Data=<span class="field-data">00 FA 01 2C 00 00 00 00</span> <span class="field-crc">ACK OK</span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-crc">CRC verificado correctamente por receptor</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="field-data">Nodos receptores leen del bus y validan CRC</span></span><br>
+<span class="annot"><span class="label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─</span> <span class="dir-rx">[RX] Todos los nodos en el bus reciben</span></span>
+</div>
+</div>
+
+<!-- ==================== LECCION 4 ==================== -->
+<div class="card" id="lesson4">
+<div class="lesson-header"><div class="lesson-number">4</div><h2>Ethernet + MQTT Ligero</h2></div>
+
+<h3>lwIP + MQTT para IoT Industrial</h3>
+<p>MQTT (Message Queuing Telemetry Transport) es un protocolo de mensajería publish/subscribe ligero optimizado para redes con ancho de banda limitado y alta latencia. Es ideal para aplicaciones IoT industrial donde múltiples sensores y actuadores necesitan comunicarse con un broker central.</p>
+
+<div class="info-grid">
+<div class="info-item"><div class="info-item-label">Protocolo</div><div class="info-item-value">TCP/IP + MQTT</div></div>
+<div class="info-item"><div class="info-item-label">Puerto</div><div class="info-item-value">1883 (sin TLS)</div></div>
+<div class="info-item"><div class="info-item-label">QoS Niveles</div><div class="info-item-value">0, 1, 2</div></div>
+<div class="info-item"><div class="info-item-label">Payload</div><div class="info-item-value">JSON / Binary</div></div>
+</div>
+
+<h4>Arquitectura Publish/Subscribe</h4>
+<div class="diagram">
+┌──────────────┐&nbsp;&nbsp;PUBLISH&nbsp;&nbsp;┌──────────────────┐&nbsp;&nbsp;FORWARD&nbsp;&nbsp;┌──────────────┐<br>
+│&nbsp;&nbsp;STM32N6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│──────────&rarr;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│─────────&rarr;│&nbsp;&nbsp;Dashboard&nbsp;&nbsp;│<br>
+│&nbsp;&nbsp;Sensor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;sensor/&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;MQTT Broker&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;sensor/&nbsp;&nbsp;│&nbsp;&nbsp;Web/App&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+│&nbsp;&nbsp;(Publisher)&nbsp;│&nbsp;&nbsp;data&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;(test.mosquitto)│&nbsp;&nbsp;data&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;(Subscriber)│<br>
+└──────────────┘&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└────────┬─────────┘&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──────────────┘<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+┌──────────────┐&nbsp;&nbsp;SUBSCRIBE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PUBLISH&nbsp;&nbsp;┌──────────────┐<br>
+│&nbsp;&nbsp;STM32N6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&lt;──────────────┘&lt;──────────│&nbsp;&nbsp;Controlador&nbsp;│<br>
+│&nbsp;&nbsp;Actuador&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;cmd/start&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;(Publisher) │<br>
+│&nbsp;(Subscriber)&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;cmd/#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+└──────────────┘&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└──────────────┘
+</div>
+
+<h3>Código — Inicialización Ethernet + lwIP</h3>
+<div class="code-block">
+<span class="comment">/* ethernet_mqtt.c - lwIP + MQTT para STM32N6 */</span><br>
+<span class="macro">#include "lwip/netif.h"</span><br>
+<span class="macro">#include "lwip/tcpip.h"</span><br>
+<span class="macro">#include "lwip/dhcp.h"</span><br>
+<span class="macro">#include "mqtt.h"</span><br><br>
+<span class="macro">#define MQTT_BROKER_IP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"test.mosquitto.org"</span><br>
+<span class="macro">#define MQTT_BROKER_PORT&nbsp;&nbsp;&nbsp;&nbsp;1883</span><br>
+<span class="macro">#define MQTT_CLIENT_ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"STM32N6_Industrial"</span><br>
+<span class="macro">#define MQTT_KEEP_ALIVE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;60</span><br><br>
+<span class="keyword">static</span> <span class="type">struct</span> netif gnetif;<br>
+<span class="keyword">static</span> mqtt_client_t *mqtt_client;<br>
+<span class="keyword">static</span> ip_addr_t broker_ip;<br><br>
+<span class="comment">/* Callback de estado de conexion MQTT */</span><br>
+<span class="keyword">static</span> <span class="type">void</span> <span class="func">mqtt_connection_cb</span>(mqtt_client_t *client,<br>
+&emsp;&emsp;<span class="type">void</span> *arg, mqtt_connection_status_t status) {<br>
+&emsp;&emsp;<span class="keyword">if</span> (status == MQTT_CONNECT_ACCEPTED) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[MQTT] Conectado al broker!\n"</span>);<br>
+&emsp;&emsp;} <span class="keyword">else</span> {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">printf</span>(<span class="string">"[MQTT] Conexion fallida: %d\n"</span>, status);<br>
+&emsp;&emsp;}<br>
+}<br><br>
+<span class="comment">/* Inicializar Ethernet y lwIP */</span><br>
+<span class="type">void</span> <span class="func">ETH_LWIP_Init</span>(<span class="type">void</span>) {<br>
+&emsp;&emsp;<span class="comment">/* Inicializar stack TCP/IP */</span><br>
+&emsp;&emsp;<span class="func">tcpip_init</span>(NULL, NULL);<br><br>
+&emsp;&emsp;<span class="comment">/* Configurar interfaz de red */</span><br>
+&emsp;&emsp;ip_addr_t ipaddr, netmask, gw;<br><br>
+<span class="macro">#ifdef USE_DHCP</span><br>
+&emsp;&emsp;<span class="type">IP_ADDR4</span>(&amp;ipaddr, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>);<br>
+&emsp;&emsp;<span class="type">IP_ADDR4</span>(&amp;netmask, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>);<br>
+&emsp;&emsp;<span class="type">IP_ADDR4</span>(&amp;gw, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>);<br>
+<span class="macro">#else</span><br>
+&emsp;&emsp;<span class="type">IP_ADDR4</span>(&amp;ipaddr, <span class="num">192</span>, <span class="num">168</span>, <span class="num">1</span>, <span class="num">100</span>);<br>
+&emsp;&emsp;<span class="type">IP_ADDR4</span>(&amp;netmask, <span class="num">255</span>, <span class="num">255</span>, <span class="num">255</span>, <span class="num">0</span>);<br>
+&emsp;&emsp;<span class="type">IP_ADDR4</span>(&amp;gw, <span class="num">192</span>, <span class="num">168</span>, <span class="num">1</span>, <span class="num">1</span>);<br>
+<span class="macro">#endif</span><br><br>
+&emsp;&emsp;<span class="comment">/* Inicializar interfaz Ethernet */</span><br>
+&emsp;&emsp;<span class="func">netif_add</span>(&amp;gnetif, &amp;ipaddr, &amp;netmask, &amp;gw,<br>
+&emsp;&emsp;&emsp;&emsp;NULL, <span class="func">ethernetif_init</span>, <span class="func">tcpip_input</span>);<br>
+&emsp;&nbsp;<span class="func">netif_set_default</span>(&amp;gnetif);<br>
+&emsp;&nbsp;<span class="func">netif_set_up</span>(&amp;gnetif);<br><br>
+<span class="macro">#ifdef USE_DHCP</span><br>
+&emsp;&nbsp;<span class="func">dhcp_start</span>(&amp;gnetif);<br>
+&emsp;&nbsp;<span class="comment">/* Esperar IP... */</span><br>
+&emsp;&nbsp;<span class="keyword">while</span> (!<span class="func">dhcp_supplied_address</span>(&amp;gnetif))<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">HAL_Delay</span>(<span class="num">100</span>);<br>
+<span class="macro">#endif</span><br><br>
+&emsp;&nbsp;<span class="func">printf</span>(<span class="string">"[ETH] IP: %s\n"</span>, <span class="func">ipaddr_ntoa</span>(&amp;gnetif.ip_addr));<br>
+}
+</div>
+
+<h3>Código — Conexión MQTT y Publish/Subscribe</h3>
+<div class="code-block">
+<span class="comment">/* Conectar al broker MQTT */</span><br>
+<span class="type">void</span> <span class="func">MQTT_Connect</span>(<span class="type">void</span>) {<br>
+&emsp;&emsp;<span class="type">struct</span> mqtt_connect_client_info_t ci = {<span class="num">0</span>};<br><br>
+&emsp;&emsp;ci.<span class="func">client_id</span> = MQTT_CLIENT_ID;<br>
+&emsp;&emsp;ci.<span class="func">keep_alive</span> = MQTT_KEEP_ALIVE;<br>&emsp;&emsp;ci.<span class="func">will_topic</span> = <span class="string">"factory/status/STM32N6_Node1"</span>;<br>&emsp;&emsp;ci.<span class="func">will_msg</span> = <span class="string">"OFFLINE"</span>;<br>&emsp;&emsp;ci.<span class="func">will_qos</span> = <span class="num">1</span>;<br>&emsp;&emsp;ci.<span class="func">will_retain</span> = <span class="num">0</span>;<br><br>
+&emsp;&emsp;<span class="comment">/* Resolver IP del broker */</span><br>
+&emsp;&nbsp;<span class="func">ipaddr_aton</span>(<span class="string">"91.121.93.94"</span>, &amp;broker_ip);<br><br>
+&emsp;&nbsp;mqtt_client = <span class="func">mqtt_client_new</span>();<br>&emsp;&nbsp;<span class="keyword">if</span> (mqtt_client == NULL) <span class="keyword">return</span>;<br><br>
+&emsp;&nbsp;<span class="comment">/* Iniciar conexion */</span><br>
+&emsp;&nbsp;<span class="func">mqtt_client_connect</span>(mqtt_client, &amp;broker_ip,<br>
+&emsp;&emsp;&emsp;&emsp;MQTT_BROKER_PORT, <span class="func">mqtt_connection_cb</span>,<br>
+&emsp;&emsp;&emsp;&emsp;NULL, &amp;ci);<br>
+}<br><br>
+<span class="comment">/* Callback para mensajes entrantes */</span><br>
+<span class="keyword">static</span> <span class="type">void</span> <span class="func">mqtt_incoming_publish_cb</span>(<span class="type">void</span> *arg,<br>
+&emsp;&nbsp;<span class="keyword">const</span> <span class="type">char</span> *topic, <span class="type">u32_t</span> tot_len) {<br>
+&emsp;&nbsp;<span class="func">printf</span>(<span class="string">"[MQTT] Mensaje en topic: %s\n"</span>, topic);<br>
+}<br><br>
+<span class="keyword">static</span> <span class="type">void</span> <span class="func">mqtt_incoming_data_cb</span>(<span class="type">void</span> *arg,<br>
+&emsp;&nbsp;<span class="keyword">const</span> <span class="type">u8_t</span> *data, <span class="type">u16_t</span> len, <span class="type">u8_t</span> flags) {<br>
+&emsp;&nbsp;<span class="type">char</span> payload[<span class="num">256</span>];<br>&emsp;&nbsp;<span class="type">uint16_t</span> copy_len = len &lt; <span class="num">255</span> ? len : <span class="num">255</span>;<br>&emsp;&nbsp;<span class="func">memcpy</span>(payload, data, copy_len);<br>&emsp;&nbsp;payload[copy_len] = <span class="string">'\0'</span>;<br><br>
+&emsp;&nbsp;<span class="func">printf</span>(<span class="string">"[MQTT] Payload: %s\n"</span>, payload);<br><br>
+&emsp;&nbsp;<span class="comment">/* Parsear comandos JSON */</span><br>
+&emsp;&nbsp;<span class="keyword">if</span> (<span class="func">strstr</span>(payload, <span class="string">""cmd":"start""</span>)) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">System_Start</span>();<br>
+&emsp;&nbsp;} <span class="keyword">else if</span> (<span class="func">strstr</span>(payload, <span class="string">""cmd":"stop""</span>)) {<br>
+&emsp;&emsp;&emsp;&emsp;<span class="func">System_Stop</span>();<br>
+&emsp;&nbsp;}<br>
+}<br><br>
+<span class="comment">/* Publicar datos de sensores en JSON */</span><br>
+<span class="type">void</span> <span class="func">MQTT_Publish_Sensors</span>(<span class="type">float</span> pressure, <span class="type">float</span> temp,<br>
+&emsp;&nbsp;<span class="type">float</span> vibration, <span class="keyword">const</span> <span class="type">char</span> *status) {<br><br>
+&emsp;&nbsp;<span class="type">char</span> json[<span class="num">512</span>];<br>&emsp;&nbsp;<span class="type">uint32_t</span> ts = <span class="func">HAL_GetTick</span>() / <span class="num">1000</span>;<br><br>
+&emsp;&nbsp;<span class="func">snprintf</span>(json, <span class="keyword">sizeof</span>(json),<br>
+&emsp;&emsp;&nbsp;<span class="string">"{\"device\":\"STM32N6_Node1\","</span><br>
+&emsp;&emsp;&nbsp;<span class="string">"\"timestamp\":%lu,"</span><br>
+&emsp;&emsp;&nbsp;<span class="string">"\"sensors\":{"</span><br>
+&emsp;&emsp;&nbsp;<span class="string">"\"pressure_psi\":%.1f,"</span><br>
+&emsp;&emsp;&nbsp;<span class="string">"\"temperature_c\":%.1f,"</span><br>
+&emsp;&emsp;&nbsp;<span class="string">"\"vibration_rms\":%.3f},"</span><br>
+&emsp;&emsp;&nbsp;<span class="string">"\"status\":\"%s\"}"</span>,<br>
+&emsp;&emsp;&nbsp;ts, pressure, temp, vibration, status);<br><br>
+&emsp;&nbsp;<span class="func">mqtt_publish</span>(mqtt_client, <span class="string">"factory/sensor/node1/data"</span>,<br>
+&emsp;&emsp;&nbsp;json, <span class="func">strlen</span>(json), <span class="num">1</span>, <span class="num">0</span>, NULL, NULL);<br>
+}<br><br>
+<span class="comment">/* Loop principal con reconexion automatica */</span><br>
+<span class="type">void</span> <span class="func">MQTT_MainLoop</span>(<span class="type">void</span>) {<br>
+&emsp;&nbsp;<span class="keyword">static</span> <span class="type">uint32_t</span> last_pub = <span class="num">0</span>;<br>&emsp;&nbsp;<span class="keyword">static</span> <span class="type">uint32_t</span> last_check = <span class="num">0</span>;<br><br>
+&emsp;&nbsp;<span class="keyword">while</span> (<span class="num">1</span>) {<br>
+&emsp;&emsp;&nbsp;<span class="func">HAL_Delay</span>(<span class="num">100</span>);<br><br>
+&emsp;&emsp;&nbsp;<span class="comment">/* Verificar conexion cada 10 segundos */</span><br>
+&emsp;&emsp;&nbsp;<span class="keyword">if</span> (<span class="func">HAL_GetTick</span>() - last_check &gt; <span class="num">10000</span>) {<br>
+&emsp;&emsp;&emsp;&nbsp;last_check = <span class="func">HAL_GetTick</span>();<br>
+&emsp;&emsp;&emsp;&nbsp;<span class="keyword">if</span> (!<span class="func">mqtt_client_is_connected</span>(mqtt_client)) {<br>
+&emsp;&emsp;&emsp;&emsp;&nbsp;<span class="func">printf</span>(<span class="string">"[MQTT] Reconectando...\n"</span>);<br>
+&emsp;&emsp;&emsp;&emsp;&nbsp;<span class="func">MQTT_Connect</span>();<br>
+&emsp;&emsp;&emsp;&nbsp;}<br>
+&emsp;&emsp;&nbsp;}<br><br>
+&emsp;&emsp;&nbsp;<span class="comment">/* Publicar cada 5 segundos */</span><br>
+&emsp;&emsp;&nbsp;<span class="keyword">if</span> (<span class="func">HAL_GetTick</span>() - last_pub &gt; <span class="num">5000</span>) {<br>
+&emsp;&emsp;&emsp;&nbsp;last_pub = <span class="func">HAL_GetTick</span>();<br>
+&emsp;&emsp;&emsp;&nbsp;<span class="type">float</span> p = <span class="func">ADC_Read_Pressure</span>();<br>
+&emsp;&emsp;&emsp;&nbsp;<span class="type">float</span> t = <span class="func">ADC_Read_Temperature</span>();<br>
+&emsp;&emsp;&emsp;&nbsp;<span class="type">float</span> v = <span class="func">Accelerometer_Read_RMS</span>();<br>
+&emsp;&emsp;&emsp;&nbsp;<span class="func">MQTT_Publish_Sensors</span>(p, t, v, <span class="string">"NORMAL"</span>);<br>
+&emsp;&emsp;&nbsp;}<br>
+&emsp;&nbsp;}<br>
+}
+</div>
+
+<h3>Formato de Mensajes JSON</h3>
+<div class="code-block">
+<span class="comment">/* Mensaje publicado cada 5 segundos */</span><br>
+{<br>
+&emsp;&nbsp;<span class="string">"device"</span>: <span class="string">"STM32N6_Node1"</span>,<br>
+&emsp;&nbsp;<span class="string">"timestamp"</span>: <span class="num">1699900000</span>,<br>
+&emsp;&nbsp;<span class="string">"sensors"</span>: {<br>
+&emsp;&emsp;&nbsp;<span class="string">"pressure_psi"</span>: <span class="num">45.2</span>,&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* 0-100 psi, resolucion 0.1 */</span><br>
+&emsp;&emsp;&nbsp;<span class="string">"temperature_c"</span>: <span class="num">23.5</span>,&nbsp;&nbsp;<span class="comment">/* -40 a 125 C, resolucion 0.1 */</span><br>
+&emsp;&emsp;&nbsp;<span class="string">"vibration_rms"</span>: <span class="num">0.032</span>&nbsp;&nbsp;<span class="comment">/* 0-50 g RMS, resolucion 0.001 */</span><br>
+&emsp;&nbsp;},<br>
+&emsp;&nbsp;<span class="string">"status"</span>: <span class="string">"NORMAL"</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">/* NORMAL, WARNING, ALARM, OFFLINE */</span><br>
+}<br><br>
+<span class="comment">/* Ejemplo: Comando de control recibido */</span><br>
+{<br>
+&emsp;&nbsp;<span class="string">"device"</span>: <span class="string">"STM32N6_Node1"</span>,<br>
+&emsp;&nbsp;<span class="string">"timestamp"</span>: <span class="num">1699900015</span>,<br>
+&emsp;&nbsp;<span class="string">"cmd"</span>: <span class="string">"start"</span>,<br>
+&emsp;&nbsp;<span class="string">"params"</span>: {<br>
+&emsp;&emsp;&nbsp;<span class="string">"speed_rpm"</span>: <span class="num">1500</span>,<br>
+&emsp;&emsp;&nbsp;<span class="string">"direction"</span>: <span class="string">"CW"</span><br>
+&emsp;&nbsp;}<br>
+}
+</div>
+
+<h3>Wildcards en Topics MQTT</h3>
+<table>
+<tr><th>Wildcard</th><th>Nivel</th><th>Ejemplo</th></tr>
+<tr><td><code>+</code></td><td>Un solo nivel</td><td><code>factory/sensor/+/data</code> &rarr; node1, node2, node3...</td></tr>
+<tr><td><code>#</code></td><td>Múltiples niveles</td><td><code>factory/#</code> &rarr; todo bajo <code>factory/</code></td></tr>
+</table>
+
+<div class="note">
+<strong>Tip:</strong> Para producción industrial, se recomienda usar TLS (puerto 8883) con certificados de cliente. El broker <code>test.mosquitto.org</code> es solo para desarrollo y pruebas.
+</div>
+
+<h3>Captura de Tráfico MQTT</h3>
+<div class="frame-capture">
+<span class="ts">[  0.000]</span> <span class="dir-tx">TX &rarr;</span> <span class="field-func">CONNECT</span> client_id=<span class="field-data">STM32N6_Industrial</span> keepalive=<span class="field-data">60</span><br>
+<span class="ts">[  0.045]</span> <span class="dir-rx">RX &larr;</span> <span class="field-func">CONNACK</span> rc=<span class="field-data">0</span> (Connection Accepted)<br><br>
+<span class="ts">[  0.050]</span> <span class="dir-tx">TX &rarr;</span> <span class="field-func">SUBSCRIBE</span> msg_id=<span class="field-data">1</span> topic=<span class="field-data">factory/sensor/+/data</span> qos=<span class="field-data">1</span><br>
+<span class="ts">[  0.092]</span> <span class="dir-rx">RX &larr;</span> <span class="field-func">SUBACK</span> msg_id=<span class="field-data">1</span> granted_qos=<span class="field-data">1</span><br><br>
+<span class="ts">[  5.000]</span> <span class="dir-tx">TX &rarr;</span> <span class="field-func">PUBLISH</span> topic=<span class="field-data">factory/sensor/node1/data</span> qos=<span class="field-data">1</span><br>
+&emsp;&nbsp;<span class="field-data">{"device":"STM32N6_Node1","timestamp":1699900000,"sensors":{</span><br>
+&emsp;&nbsp;<span class="field-data">"pressure_psi":45.2,"temperature_c":23.5,"vibration_rms":0.032},</span><br>
+&emsp;&nbsp;<span class="field-data">"status":"NORMAL"}</span> (payload: <span class="field-data">142</span> bytes)<br>
+<span class="ts">[  5.048]</span> <span class="dir-rx">RX &larr;</span> <span class="field-func">PUBACK</span> msg_id=<span class="field-data">2</span> (QoS 1 acknowledged)<br><br>
+<span class="ts">[ 10.000]</span> <span class="dir-tx">TX &rarr;</span> <span class="field-func">PUBLISH</span> topic=<span class="field-data">factory/sensor/node1/data</span> (payload: <span class="field-data">142</span> bytes)<br>
+<span class="ts">[ 10.052]</span> <span class="dir-rx">RX &larr;</span> <span class="field-func">PUBACK</span> msg_id=<span class="field-data">3</span><br><br>
+<span class="ts">[ 12.340]</span> <span class="dir-rx">RX &larr;</span> <span class="field-func">PUBLISH</span> topic=<span class="field-data">factory/cmd/node1</span><br>
+&emsp;&nbsp;<span class="field-data">{"device":"STM32N6_Node1","timestamp":1699900012,"cmd":"stop"}</span><br>
+<span class="ts">[ 12.341]</span> <span class="dir-tx">TX &rarr;</span> <span class="field-func">PUBACK</span> msg_id=<span class="field-data">1</span> (ack comando recibido)
+</div>
+</div>
+
+<!-- ==================== SIMULADOR DE TERMINAL MODBUS ==================== -->
+<div class="section-title">Simulador de Terminal Modbus</div>
+
+<div class="card">
+<p>Interfaz interactiva que simula una terminal de comunicaciones Modbus RTU conectada a un bus RS-485. Escribe comandos para interactuar con un esclavo virtual.</p>
+
+<div class="terminal">
+<div class="terminal-header">
+<div class="terminal-dot red"></div>
+<div class="terminal-dot yellow"></div>
+<div class="terminal-dot green"></div>
+<div class="terminal-title">modbus-terminal — STM32N6 Industrial</div>
+</div>
+<div class="terminal-body" id="terminalBody">
+<div class="terminal-output" id="terminalOutput">
+<span style="color:#10b981">=== STM32N6 Modbus RTU Terminal v1.0 ===</span>
+<span style="color:#9ca3af">
+Bus: RS-485 @ 9600 baud, 8N1
+Maestro: STM32N6 (ID=0)
+Esclavo simulado: ID=0x01, Holding Registers[100]
+</span>
+<span style="color:#3b82f6">
+Comandos disponibles:
+  read &lt;addr&gt; &lt;reg&gt; &lt;count&gt;  - Leer holding registers
+  write &lt;addr&gt; &lt;reg&gt; &lt;val&gt;   - Escribir holding register
+  status                       - Estado de la conexión
+  help                         - Mostrar ayuda
+  clear                        - Limpiar pantalla
+</span>
+</div>
+<div class="terminal-line">
+<span class="terminal-prompt">STM32N6&gt;</span>
+<input type="text" class="terminal-input" id="terminalInput" placeholder="Escribe un comando..." autocomplete="off" spellcheck="false">
+</div>
+</div>
+</div>
+</div>
+
+<!-- ==================== QUIZZES ==================== -->
+<div class="section-title">Evaluación de Conocimientos</div>
+
+<div class="card">
+<div class="quiz-container" id="quiz1">
+<div class="quiz-question">1. ¿Cuál es la distancia máxima de comunicación de RS-485 operando a 9600 baudios?</div>
+<button class="quiz-option" onclick="checkQuiz(1,0)">100 metros</button>
+<button class="quiz-option" onclick="checkQuiz(1,1)">500 metros</button>
+<button class="quiz-option" onclick="checkQuiz(1,2)">1200 metros</button>
+<button class="quiz-option" onclick="checkQuiz(1,3)">5000 metros</button>
+<div class="quiz-feedback" id="quiz1-feedback">
+<strong>Correcto!</strong> RS-485 puede alcanzar hasta 1200 metros a 9600 baudios gracias a su señalización diferencial. A velocidades mayores, la distancia se reduce (ej: ~100m a 500 kbps, ~15m a 10 Mbps).
+</div>
+</div>
+
+<div class="quiz-container" id="quiz2">
+<div class="quiz-question">2. ¿Qué código de función Modbus RTU se utiliza para leer Holding Registers (registros de retención)?</div>
+<button class="quiz-option" onclick="checkQuiz(2,0)">0x01 — Read Coils</button>
+<button class="quiz-option" onclick="checkQuiz(2,1)">0x03 — Read Holding Registers</button>
+<button class="quiz-option" onclick="checkQuiz(2,2)">0x05 — Write Single Coil</button>
+<button class="quiz-option" onclick="checkQuiz(2,3)">0x10 — Write Multiple Registers</button>
+<div class="quiz-feedback" id="quiz2-feedback">
+<strong>Correcto!</strong> El código de función 0x03 (Read Holding Registers) lee entre 1 y 125 registros de 16 bits de un esclavo Modbus. Es el código más utilizado para lectura de datos analógicos (sensores, setpoints, etc.).
+</div>
+</div>
+</div>
+
+<footer>
+<p>STM32N6 Industrial Academy &mdash; Módulo 3: Comunicaciones Industriales</p>
+<p style="margin-top:4px">Contenido generado para fines educativos &copy; 2025</p>
+</footer>
+
+</div><!-- /container -->
+
+<script>
+// ==================== PROGRESS BAR ====================
+function updateProgress() {
+  const lessons = ['lesson1', 'lesson2', 'lesson3', 'lesson4'];
+  const scrollTop = window.scrollY;
+  const docHeight = document.body.scrollHeight - window.innerHeight;
+  let progress = Math.min(100, Math.round((scrollTop / docHeight) * 100));
+  document.getElementById('progressBar').style.width = progress + '%';
+}
+window.addEventListener('scroll', updateProgress);
+window.addEventListener('load', updateProgress);
+
+// ==================== TERMINAL SIMULATOR ====================
+const termBody = document.getElementById('terminalBody');
+const termOutput = document.getElementById('terminalOutput');
+const termInput = document.getElementById('terminalInput');
+let commandHistory = [];
+let historyIndex = -1;
+
+// Holding registers virtuales del esclavo
+const holdingRegs = new Array(100).fill(0);
+holdingRegs[0] = 0x000A; holdingRegs[1] = 0x0014;
+holdingRegs[2] = 0x001E; holdingRegs[3] = 0x0028;
+holdingRegs[4] = 0x0032; holdingRegs[5] = 0x003C;
+holdingRegs[10] = 0x1234; holdingRegs[11] = 0x5678;
+holdingRegs[20] = 0x00FA; holdingRegs[21] = 0x01C2;
+holdingRegs[50] = 0x0000; holdingRegs[51] = 0x0001;
+
+function appendOutput(html, isError) {
+  const div = document.createElement('div');
+  div.className = 'terminal-output';
+  div.innerHTML = html;
+  if (isError) div.style.color = '#ef4444';
+  termOutput.appendChild(div);
+  termBody.scrollTop = termBody.scrollHeight;
+}
+
+function typeEffect(text, color, delay, callback) {
+  const div = document.createElement('div');
+  div.className = 'terminal-output';
+  if (color) div.style.color = color;
+  termOutput.appendChild(div);
+  let i = 0;
+  function type() {
+    if (i < text.length) {
+      div.textContent += text.charAt(i);
+      i++;
+      termBody.scrollTop = termBody.scrollHeight;
+      setTimeout(type, delay);
+    } else if (callback) {
+      callback();
+    }
+  }
+  type();
+}
+
+function formatFrame(addr, func, dataBytes, crc) {
+  const ts = (Math.random() * 0.1).toFixed(3);
+  let dataStr = dataBytes.map(b => b.toString(16).padStart(2,'0').toUpperCase()).join(' ');
+  let crcStr = crc.toString(16).padStart(4,'0').toUpperCase();
+  return `[${ts.padStart(7)}] TX → <span style="color:#ff7b72">${addr.toString(16).padStart(2,'0').toUpperCase()}</span> <span style="color:#d2a8ff">${func.toString(16).padStart(2,'0').toUpperCase()}</span> <span style="color:#10b981">${dataStr}</span> <span style="color:#ef4444">${crcStr.slice(2)} ${crcStr.slice(0,2)}</span>`;
+}
+
+function modbusCRC(data) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < data.length; i++) {
+    crc ^= data[i];
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 1) ? ((crc >> 1) ^ 0xA001) : (crc >> 1);
+    }
+  }
+  return crc;
+}
+
+function processCommand(cmd) {
+  const parts = cmd.trim().split(/\s+/);
+  if (parts.length === 0) return;
+
+  appendOutput(`<span style="color:#f59e0b;font-weight:700">STM32N6&gt;</span> ${cmd}`);
+
+  const command = parts[0].toLowerCase();
+
+  if (command === 'help') {
+    setTimeout(() => {
+      appendOutput(`<span style="color:#3b82f6">Comandos disponibles:
+  read &lt;addr&gt; &lt;reg&gt; &lt;count&gt;  — Leer holding registers (ej: read 1 0 5)
+  write &lt;addr&gt; &lt;reg&gt; &lt;val&gt;   — Escribir un register (ej: write 1 50 1234)
+  status                       — Estado del bus y conexión
+  help                         — Esta ayuda
+  clear                        — Limpiar pantalla</span>`);
+    }, 50);
+  }
+  else if (command === 'clear') {
+    termOutput.innerHTML = '';
+  }
+  else if (command === 'status') {
+    setTimeout(() => {
+      appendOutput(`<span style="color:#10b981">Estado del Bus RS-485:
+  Puerto: USART2 @ 9600 baud, 8N1
+  Modo: Half-duplex
+  DE/RE: PA1 (GPIO Output)
+  Esclavo: ID=0x01, Registros=100
+  Estado: CONECTADO
+  Ultimo error: Ninguno</span>`);
+    }, 50);
+  }
+  else if (command === 'read' && parts.length >= 4) {
+    const slaveAddr = parseInt(parts[1]);
+    const regAddr = parseInt(parts[2]);
+    const count = parseInt(parts[3]);
+
+    if (isNaN(slaveAddr) || isNaN(regAddr) || isNaN(count)) {
+      appendOutput(`<span style="color:#ef4444">Error: Argumentos invalidos. Uso: read &lt;addr&gt; &lt;reg&gt; &lt;count&gt;</span>`, true);
+      return;
+    }
+    if (slaveAddr < 1 || slaveAddr > 247) {
+      appendOutput(`<span style="color:#ef4444">Error: Direccion de esclavo fuera de rango (1-247)</span>`, true);
+      return;
+    }
+    if (regAddr + count > 100) {
+      setTimeout(() => {
+        appendOutput(`<span style="color:#ef4444">[MB] Exception 0x02: ILLEGAL DATA ADDRESS</span>`);
+        appendOutput(`Registro ${regAddr + count - 1} fuera de rango (max: 99)`);
+      }, 80);
+      return;
+    }
+
+    // Build TX frame
+    const txData = [slaveAddr, 0x03, (regAddr >> 8) & 0xFF, regAddr & 0xFF, (count >> 8) & 0xFF, count & 0xFF];
+    const crc = modbusCRC(txData);
+
+    setTimeout(() => {
+      appendOutput(`<span style="color:#9ca3af">Enviando peticion Modbus...</span>`);
+      appendOutput(formatFrame(slaveAddr, 0x03, [(regAddr>>8)&0xFF, regAddr&0xFF, (count>>8)&0xFF, count&0xFF], crc));
+    }, 60);
+
+    // Build RX response
+    setTimeout(() => {
+      const rxBytes = count * 2;
+      const rxData = [slaveAddr, 0x03, rxBytes];
+      for (let i = 0; i < count; i++) {
+        rxData.push((holdingRegs[regAddr + i] >> 8) & 0xFF);
+        rxData.push(holdingRegs[regAddr + i] & 0xFF);
+      }
+      const rxCrc = modbusCRC(rxData);
+      const crcHi = (rxCrc >> 8) & 0xFF;
+      const crcLo = rxCrc & 0xFF;
+
+      let dataStr = '';
+      for (let i = 0; i < rxBytes; i++) {
+        dataStr += rxData[3 + i].toString(16).padStart(2, '0').toUpperCase() + ' ';
+      }
+
+      const ts = (0.05 + Math.random() * 0.04).toFixed(3);
+      appendOutput(`<span style="color:#9ca3af">Respuesta recibida (${ts}ms):</span>`);
+      appendOutput(`[${ts.padStart(7)}] <span style="color:#10b981">RX ←</span> <span style="color:#ff7b72">${slaveAddr.toString(16).padStart(2,'0').toUpperCase()}</span> <span style="color:#d2a8ff">03</span> <span style="color:#10b981">${rxBytes.toString(16).padStart(2,'0').toUpperCase()} ${dataStr.trim()}</span> <span style="color:#ef4444">${crcLo.toString(16).padStart(2,'0').toUpperCase()} ${crcHi.toString(16).padStart(2,'0').toUpperCase()}</span>`);
+
+      // Decode registers
+      appendOutput(`<span style="color:#3b82f6">Decodificacion:</span>`);
+      for (let i = 0; i < count; i++) {
+        const val = holdingRegs[regAddr + i];
+        appendOutput(`  HR[${(regAddr + i).toString().padStart(3)}] = 0x${val.toString(16).padStart(4,'0').toUpperCase()} = ${val}`);
+      }
+      appendOutput(`<span style="color:#10b981">CRC OK — ${count} registro(s) leido(s) correctamente</span>`);
+    }, 80 + Math.random() * 120);
+  }
+  else if (command === 'write' && parts.length >= 4) {
+    const slaveAddr = parseInt(parts[1]);
+    const regAddr = parseInt(parts[2]);
+    const value = parseInt(parts[3]);
+
+    if (isNaN(slaveAddr) || isNaN(regAddr) || isNaN(value)) {
+      appendOutput(`<span style="color:#ef4444">Error: Argumentos invalidos. Uso: write &lt;addr&gt; &lt;reg&gt; &lt;val&gt;</span>`, true);
+      return;
+    }
+    if (regAddr >= 100) {
+      appendOutput(`<span style="color:#ef4444">Error: Registro ${regAddr} fuera de rango (0-99)</span>`, true);
+      return;
+    }
+    if (value < 0 || value > 0xFFFF) {
+      appendOutput(`<span style="color:#ef4444">Error: Valor debe estar entre 0 y 65535</span>`, true);
+      return;
+    }
+
+    const oldVal = holdingRegs[regAddr];
+    holdingRegs[regAddr] = value;
+
+    const txData = [slaveAddr, 0x06, (regAddr >> 8) & 0xFF, regAddr & 0xFF, (value >> 8) & 0xFF, value & 0xFF];
+    const crc = modbusCRC(txData);
+
+    setTimeout(() => {
+      appendOutput(`<span style="color:#9ca3af">Escribiendo HR[${regAddr}] = ${value} (0x${value.toString(16).padStart(4,'0').toUpperCase()})...</span>`);
+      appendOutput(formatFrame(slaveAddr, 0x06, [(regAddr>>8)&0xFF, regAddr&0xFF, (value>>8)&0xFF, value&0xFF], crc));
+    }, 60);
+
+    setTimeout(() => {
+      appendOutput(`<span style="color:#10b981">Write OK — HR[${regAddr}]: ${oldVal} → ${value}</span>`);
+    }, 80 + Math.random() * 100);
+  }
+  else {
+    setTimeout(() => {
+      appendOutput(`<span style="color:#ef4444">Comando desconocido: "${command}". Escribe 'help' para ver los comandos disponibles.</span>`, true);
+    }, 50);
+  }
+}
+
+termInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    const cmd = this.value.trim();
+    if (cmd) {
+      commandHistory.push(cmd);
+      historyIndex = commandHistory.length;
+      processCommand(cmd);
+    }
+    this.value = '';
+  }
+  else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (historyIndex > 0) {
+      historyIndex--;
+      this.value = commandHistory[historyIndex];
+    }
+  }
+  else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (historyIndex < commandHistory.length - 1) {
+      historyIndex++;
+      this.value = commandHistory[historyIndex];
+    } else {
+      historyIndex = commandHistory.length;
+      this.value = '';
+    }
+  }
+});
+
+// Auto-focus terminal input when clicking terminal body
+termBody.addEventListener('click', function(e) {
+  if (e.target === termBody || e.target === termOutput) {
+    termInput.focus();
+  }
+});
+
+// ==================== QUIZZES ====================
+function checkQuiz(quizNum, selectedIndex) {
+  const container = document.getElementById('quiz' + quizNum);
+  const buttons = container.querySelectorAll('.quiz-option');
+  const feedback = document.getElementById('quiz' + quizNum + '-feedback');
+
+  // Disable all buttons
+  buttons.forEach(btn => btn.disabled = true);
+
+  // Correct answers
+  const correctAnswers = { 1: 2, 2: 1 };
+  const correctIdx = correctAnswers[quizNum];
+
+  if (selectedIndex === correctIdx) {
+    buttons[selectedIndex].classList.add('correct');
+    feedback.className = 'quiz-feedback show correct';
+  } else {
+    buttons[selectedIndex].classList.add('wrong');
+    buttons[correctIdx].classList.add('correct');
+    feedback.className = 'quiz-feedback show wrong';
+    if (quizNum === 1) {
+      feedback.innerHTML = '<strong>Incorrecto.</strong> La distancia máxima de RS-485 a 9600 baudios es <strong>1200 metros</strong>. A mayores velocidades la distancia disminuye significativamente debido a la atenuación de la señal diferencial.';
+    } else {
+      feedback.innerHTML = '<strong>Incorrecto.</strong> El código de función correcto es <strong>0x03 (Read Holding Registers)</strong>. El código 0x01 lee coils (salidas digitales), 0x05 escribe un coil, y 0x10 escribe múltiples registros.';
+    }
+  }
+}
+</script>
+</body>
+</html>

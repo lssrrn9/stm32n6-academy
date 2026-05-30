@@ -1,0 +1,50 @@
+{
+  "name": "STM32N6 Industrial Academy",
+  "short_name": "N6 Academy",
+  "description": "Formación técnica en Edge AI, sensores industriales y comunicaciones con STM32N6. PWA para Windows, Android e iOS.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#ff6b35",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["education", "utilities"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%231a1a1a'/%3E%3Ctext x='96' y='120' font-size='96' text-anchor='middle'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%231a1a1a'/%3E%3Ctext x='256' y='340' font-size='256' text-anchor='middle'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231a1a1a'/%3E%3Ctext x='90' y='125' font-size='90' text-anchor='middle'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1280' height='720' viewBox='0 0 1280 720'%3E%3Crect width='1280' height='720' fill='%231a1a1a'/%3E%3Ctext x='640' y='360' font-size='64' fill='%23ff6b35' text-anchor='middle' font-family='sans-serif'%3E🖥️ N6 Academy Dashboard%3C/text%3E%3C/svg%3E",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "Dashboard de cursos STM32N6"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='750' height='1334' viewBox='0 0 750 1334'%3E%3Crect width='750' height='1334' fill='%231a1a1a'/%3E%3Ctext x='375' y='667' font-size='48' fill='%2300c853' text-anchor='middle' font-family='sans-serif'%3E📱 N6 Mobile View%3C/text%3E%3C/svg%3E",
+      "sizes": "750x1334",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Vista móvil de la academia"
+    }
+  ]
+}

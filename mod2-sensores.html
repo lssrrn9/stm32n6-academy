@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modulo 2: Sensores e Interfaces | STM32N6 Industrial Academy</title>
+<style>
+:root{--bg:#0f1117;--card:#1a1d29;--accent:#f59e0b;--success:#10b981;--text:#e5e7eb;--text-sec:#9ca3af;--border:#2d3142;--code-bg:#0d0f17;--danger:#ef4444;--info:#3b82f6}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.container{max-width:900px;margin:0 auto;padding:20px}
+header{text-align:center;padding:40px 20px 20px;border-bottom:2px solid var(--border);margin-bottom:24px}
+header h1{font-size:1.8rem;margin-bottom:8px}
+header .subtitle{color:var(--text-sec);font-size:1rem}
+.badge{display:inline-block;background:var(--accent);color:#000;padding:4px 14px;border-radius:20px;font-size:.75rem;font-weight:700;text-transform:uppercase;margin-top:10px;letter-spacing:.5px}
+.progress-bar{width:100%;height:8px;background:var(--border);border-radius:4px;margin-bottom:30px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);width:0%;border-radius:4px;transition:width .4s ease}
+.card{background:var(--card);border-radius:12px;padding:24px;margin-bottom:24px;border:1px solid var(--border);transition:border-color .2s}
+.card:hover{border-color:#3d4156}
+.card h2{color:var(--accent);font-size:1.3rem;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.card h3{color:var(--text);font-size:1.05rem;margin:20px 0 10px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.card p{color:var(--text-sec);margin-bottom:12px}
+.card ul{margin:10px 0 10px 20px;color:var(--text-sec)}
+.card li{margin-bottom:6px}
+.card strong{color:var(--text)}
+pre{background:var(--code-bg);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:16px;overflow-x:auto;margin:14px 0;position:relative}
+code{font-family:'Fira Code','Consolas',monospace;font-size:.85rem;color:var(--text)}
+.code-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.code-label{font-size:.75rem;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.btn-copy{background:transparent;border:1px solid var(--border);color:var(--text-sec);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.75rem;transition:all .2s}
+.btn-copy:hover{border-color:var(--accent);color:var(--accent)}
+.diagram{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:'Consolas',monospace;font-size:.82rem;color:var(--text);overflow-x:auto;margin:14px 0;line-height:1.5}
+.diagram .label{color:var(--accent);font-weight:bold}
+.diagram .wire{color:var(--success)}
+.diagram .pin{color:var(--info)}
+.exercise{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:18px;margin-top:18px}
+.exercise h4{color:var(--accent);font-size:.95rem;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.exercise p{margin-bottom:8px;font-size:.9rem}
+.hint{font-size:.82rem;color:var(--text-sec);border-left:3px solid var(--info);padding-left:12px;margin-top:10px}
+.btn-wokwi{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#000;border:none;padding:10px 20px;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:14px;transition:transform .15s,box-shadow .15s}
+.btn-wokwi:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(245,158,11,0.3)}
+.btn-wokwi svg{width:18px;height:18px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:760px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-header h3{color:var(--accent);font-size:1.1rem}
+.modal-close{background:none;border:none;color:var(--text-sec);font-size:1.5rem;cursor:pointer;padding:4px;line-height:1;border-radius:6px;transition:color .2s}
+.modal-close:hover{color:var(--danger)}
+.modal-tabs{display:flex;gap:4px;padding:10px 20px 0;border-bottom:1px solid var(--border)}
+.modal-tab{background:none;border:none;color:var(--text-sec);padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:.85rem;font-weight:500;transition:all .2s}
+.modal-tab:hover{color:var(--text)}
+.modal-tab.active{color:var(--accent);background:rgba(245,158,11,0.08);border-bottom:2px solid var(--accent)}
+.modal-body{padding:16px 20px;overflow-y:auto;flex:1}
+.modal-panel{display:none}
+.modal-panel.active{display:block}
+.modal pre{margin:0 0 10px}
+.note{background:rgba(59,130,246,0.08);border-left:4px solid var(--info);padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;font-size:.88rem;color:var(--text-sec)}
+.note strong{color:var(--info)}
+.params-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.88rem}
+.params-table th,.params-table td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+.params-table th{background:var(--code-bg);color:var(--accent);font-weight:600}
+.params-table td{color:var(--text-sec)}
+.params-table tr:nth-child(even){background:rgba(255,255,255,0.02)}
+.toc{background:var(--card);border-radius:12px;padding:20px 24px;margin-bottom:24px;border:1px solid var(--border)}
+.toc h3{color:var(--accent);font-size:1rem;margin-bottom:12px}
+.toc ul{list-style:none;margin:0;padding:0}
+.toc li{margin-bottom:8px}
+.toc a{color:var(--text-sec);text-decoration:none;font-size:.9rem;transition:color .2s}
+.toc a:hover{color:var(--accent)}
+.toc .num{display:inline-block;background:var(--border);color:var(--accent);width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;font-size:.75rem;font-weight:700;margin-right:8px}
+footer{text-align:center;padding:30px 20px;color:var(--text-sec);font-size:.82rem;border-top:1px solid var(--border);margin-top:20px}
+@media(max-width:600px){.container{padding:12px}.card{padding:16px}header h1{font-size:1.4rem}.modal{max-height:92vh}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Modulo 2: Sensores e Interfaces</h1>
+  <p class="subtitle">STM32N6 Industrial Academy &mdash; Comunicacion con sensores reales via I2C, SPI, ADC y DMA</p>
+  <span class="badge">Nivel Intermedio</span>
+</header>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<nav class="toc">
+  <h3>Contenido del modulo</h3>
+  <ul>
+    <li><a href="#lec1"><span class="num">1</span>I2C: TMP117 + Display OLED SSD1306</a></li>
+    <li><a href="#lec2"><span class="num">2</span>SPI: Sensor BMP280 (Presion y Temperatura)</a></li>
+    <li><a href="#lec3"><span class="num">3</span>ADC: Sensor Industrial 4-20mA</a></li>
+    <li><a href="#lec4"><span class="num">4</span>DMA para Adquisicion Continua</a></li>
+  </ul>
+</nav>
+
+<!-- ==================== LECCION 1 ==================== -->
+<article class="card" id="lec1">
+<h2><span>01</span> I2C: TMP117 + Display OLED SSD1306</h2>
+
+<h3>Protocolo I2C</h3>
+<p>I2C (Inter-Integrated Circuit) es un bus serie sincrono multi-maestro/multi-esclavo que usa solo dos lineas:</p>
+<ul>
+<li><strong>SDA</strong> (Serial Data) &mdash; linea de datos bidireccional</li>
+<li><strong>SCL</strong> (Serial Clock) &mdash; linea de reloj generada por el master</li>
+</ul>
+<p>Cada dispositivo esclavo tiene una direccion unica de <strong>7 bits</strong> (0x00-0x7F). El master inicia la comunicacion con una condicion START, envia la direccion del esclavo + bit R/W, y luego intercambia datos. La comunicacion termina con una condicion STOP.</p>
+<div class="note"><strong>Nota:</strong> I2C opera en modos Standard (100 kHz), Fast (400 kHz) y Fast+ (1 MHz). En este modulo usamos 100 kHz para maxima compatibilidad.</div>
+
+<h3>Sensor TMP117</h3>
+<p>El <strong>TMP117</strong> es un sensor de temperatura digital de alta precision (+/-0.1 C) con interfaz I2C. Su direccion por defecto es <code>0x48</code> (7 bits). El registro de temperatura (0x00) devuelve un valor de 16 bits con signo, donde 1 LSB = <strong>0.0078 C</strong>.</p>
+<table class="params-table">
+<tr><th>Parametro</th><th>Valor</th></tr>
+<tr><td>Direccion I2C</td><td>0x48 (7 bits)</td></tr>
+<tr><td>Rango de temperatura</td><td>-55 C a +125 C</td></tr>
+<tr><td>Precision</td><td>+/-0.1 C (typ)</td></tr>
+<tr><td>Resolucion</td><td>0.0078 C/LSB</td></tr>
+<tr><td>Registro de temperatura</td><td>0x00 (16-bit signed)</td></tr>
+</table>
+
+<h3>Display OLED SSD1306</h3>
+<p>El controlador <strong>SSD1306</strong> maneja pantallas OLED de 128x64 pixeles via I2C. Su direccion tipica es <code>0x3C</code>. Requiere una secuencia de inicializacion de comandos antes de poder mostrar datos.</p>
+
+<h3>Diagrama de conexiones</h3>
+<div class="diagram">
+<span class="label">STM32N6</span>              <span class="label">TMP117</span>          <span class="label">OLED SSD1306</span>
+  <span class="pin">PB6</span>(SCL)--------<span class="wire">SCL</span>------------<span class="wire">SCL</span>
+  <span class="pin">PB7</span>(SDA)--------<span class="wire">SDA</span>------------<span class="wire">SDA</span>
+  <span class="pin">3.3V</span>-----------<span class="wire">V+</span>--------------<span class="wire">VCC</span>
+  <span class="pin">GND</span>------------<span class="wire">GND</span>-------------<span class="wire">GND</span>
+
+<span class="label">Resistencias pull-up 4.7k en SDA y SCL a 3.3V</span>
+</div>
+
+<h3>Codigo HAL: Inicializacion I2C</h3>
+<div class="code-header"><span class="code-label">C &mdash; MX_I2C1_Init</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>I2C_HandleTypeDef hi2c1;
+
+void MX_I2C1_Init(void)
+{
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x00303D5B;      /* 100 kHz @ 64 MHz */
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+
+  if (HAL_I2C_Init(&amp;hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* Configura filtro analogico */
+  HAL_I2CEx_ConfigAnalogFilter(&amp;hi2c1, I2C_ANALOGFILTER_ENABLE);
+}
+
+void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  __HAL_RCC_I2C1_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /* PB6 -&gt; SCL, PB7 -&gt; SDA */
+  GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
+  HAL_GPIO_Init(GPIOB, &amp;GPIO_InitStruct);
+}</code></pre>
+
+<h3>Codigo HAL: Lectura de temperatura TMP117</h3>
+<div class="code-header"><span class="code-label">C &mdash; TMP117_ReadTemperature</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>#define TMP117_ADDR         (0x48 &lt;&lt; 1)   /* Direccion 8-bit para HAL */
+#define TMP117_TEMP_REG     0x00
+#define TMP117_RESOLUTION   0.0078125f    /* 1 LSB = 7.8125 mili-C */
+
+float TMP117_ReadTemperature(void)
+{
+  uint8_t reg = TMP117_TEMP_REG;
+  uint8_t buf[2];
+  int16_t raw;
+  float temp;
+
+  /* Escribe el registro a leer */
+  HAL_I2C_Master_Transmit(&amp;hi2c1, TMP117_ADDR, &amp;reg, 1, HAL_MAX_DELAY);
+  /* Lee 2 bytes de temperatura */
+  HAL_I2C_Master_Receive(&amp;hi2c1, TMP117_ADDR, buf, 2, HAL_MAX_DELAY);
+
+  raw = (int16_t)((buf[0] &lt;&lt; 8) | buf[1]);
+  temp = raw * TMP117_RESOLUTION;
+
+  return temp;
+}</code></pre>
+
+<h3>Codigo HAL: Inicializacion SSD1306</h3>
+<div class="code-header"><span class="code-label">C &mdash; SSD1306_Init</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>#define SSD1306_ADDR  (0x3C &lt;&lt; 1)
+
+static void SSD1306_WriteCommand(uint8_t cmd)
+{
+  uint8_t buf[2] = {0x00, cmd};  /* 0x00 = Co=0, D/C#=0 (comando) */
+  HAL_I2C_Master_Transmit(&amp;hi2c1, SSD1306_ADDR, buf, 2, HAL_MAX_DELAY);
+}
+
+void SSD1306_Init(void)
+{
+  HAL_Delay(100);  /* Espera boot del OLED */
+
+  SSD1306_WriteCommand(0xAE); /* DISPLAY OFF */
+  SSD1306_WriteCommand(0x20); /* Set Memory Addressing Mode */
+  SSD1306_WriteCommand(0x00); /* Horizontal addressing */
+  SSD1306_WriteCommand(0xB0); /* Set Page Start */
+  SSD1306_WriteCommand(0xC8); /* COM Scan Direction */
+  SSD1306_WriteCommand(0x00); /* Set low column address */
+  SSD1306_WriteCommand(0x10); /* Set high column address */
+  SSD1306_WriteCommand(0x40); /* Set start line address */
+  SSD1306_WriteCommand(0x81); /* Set contrast control */
+  SSD1306_WriteCommand(0xFF);
+  SSD1306_WriteCommand(0xA1); /* Segment remap */
+  SSD1306_WriteCommand(0xA6); /* Normal display */
+  SSD1306_WriteCommand(0xA8); /* Set multiplex ratio */
+  SSD1306_WriteCommand(0x3F); /* 1/64 duty */
+  SSD1306_WriteCommand(0xA4); /* Output follows RAM content */
+  SSD1306_WriteCommand(0xD3); /* Set display offset */
+  SSD1306_WriteCommand(0x00);
+  SSD1306_WriteCommand(0xD5); /* Set display clock divide */
+  SSD1306_WriteCommand(0xF0);
+  SSD1306_WriteCommand(0xD9); /* Set pre-charge period */
+  SSD1306_WriteCommand(0x22);
+  SSD1306_WriteCommand(0xDA); /* Set COM pins hardware config */
+  SSD1306_WriteCommand(0x12);
+  SSD1306_WriteCommand(0xDB); /* Set VCOMH */
+  SSD1306_WriteCommand(0x20);
+  SSD1306_WriteCommand(0x8D); /* Charge pump setting */
+  SSD1306_WriteCommand(0x14); /* Enable charge pump */
+  SSD1306_WriteCommand(0xAF); /* DISPLAY ON */
+
+  SSD1306_Clear();
+}</code></pre>
+
+<h3>Codigo HAL: Mostrar temperatura en OLED</h3>
+<div class="code-header"><span class="code-label">C &mdash; SSD1306_ShowTemperature</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Fuente de 5x7 para digitos (simplificada) */
+static const uint8_t font5x7[10][5] = {
+  {0x3E,0x51,0x49,0x45,0x3E}, /* 0 */
+  {0x00,0x42,0x7F,0x40,0x00}, /* 1 */
+  {0x42,0x61,0x51,0x49,0x46}, /* 2 */
+  {0x21,0x41,0x45,0x4B,0x31}, /* 3 */
+  {0x18,0x14,0x12,0x7F,0x10}, /* 4 */
+  {0x27,0x45,0x45,0x45,0x39}, /* 5 */
+  {0x3C,0x4A,0x49,0x49,0x30}, /* 6 */
+  {0x01,0x71,0x09,0x05,0x03}, /* 7 */
+  {0x36,0x49,0x49,0x49,0x36}, /* 8 */
+  {0x06,0x49,0x49,0x29,0x1E}, /* 9 */
+};
+
+static uint8_t oled_buffer[8][128];  /* 8 paginas x 128 columnas */
+
+void SSD1306_Clear(void)
+{
+  memset(oled_buffer, 0, sizeof(oled_buffer));
+  for (uint8_t page = 0; page &lt; 8; page++)
+  {
+    SSD1306_WriteCommand(0xB0 + page);
+    SSD1306_WriteCommand(0x00);
+    SSD1306_WriteCommand(0x10);
+    uint8_t data[129];
+    data[0] = 0x40; /* Co=0, D/C#=1 (datos) */
+    memcpy(&amp;data[1], oled_buffer[page], 128);
+    HAL_I2C_Master_Transmit(&amp;hi2c1, SSD1306_ADDR, data, 129, HAL_MAX_DELAY);
+  }
+}
+
+void SSD1306_DrawChar(uint8_t x, uint8_t page, char c)
+{
+  if (c &gt;= '0' &amp;&amp; c &lt;= '9')
+  {
+    uint8_t idx = c - '0';
+    for (uint8_t i = 0; i &lt; 5; i++)
+    {
+      if (x + i &lt; 128) oled_buffer[page][x + i] = font5x7[idx][i];
+    }
+    if (x + 5 &lt; 128) oled_buffer[page][x + 5] = 0x00; /* espacio */
+  }
+  else if (c == '.')
+  {
+    if (x &lt; 128) oled_buffer[page][x] = 0x60;
+  }
+  else if (c == '-')
+  {
+    if (x &lt; 128) oled_buffer[page][x] = 0x08;
+  }
+  else if (c == 'C')
+  {
+    uint8_t fontC[5] = {0x3E,0x41,0x41,0x41,0x22};
+    for (uint8_t i = 0; i &lt; 5; i++)
+      if (x + i &lt; 128) oled_buffer[page][x + i] = fontC[i];
+  }
+}
+
+void SSD1306_DrawString(uint8_t x, uint8_t page, const char* str)
+{
+  while (*str)
+  {
+    SSD1306_DrawChar(x, page, *str);
+    x += 6;
+    str++;
+  }
+}
+
+void SSD1306_Refresh(void)
+{
+  for (uint8_t page = 0; page &lt; 8; page++)
+  {
+    SSD1306_WriteCommand(0xB0 + page);
+    SSD1306_WriteCommand(0x00);
+    SSD1306_WriteCommand(0x10);
+    uint8_t data[129];
+    data[0] = 0x40;
+    memcpy(&amp;data[1], oled_buffer[page], 128);
+    HAL_I2C_Master_Transmit(&amp;hi2c1, SSD1306_ADDR, data, 129, HAL_MAX_DELAY);
+  }
+}
+
+void SSD1306_ShowTemperature(float temp)
+{
+  char buf[16];
+  snprintf(buf, sizeof(buf), "%+.2f C", temp);
+  memset(oled_buffer, 0, sizeof(oled_buffer));
+  SSD1306_DrawString(10, 2, "TEMP:");
+  SSD1306_DrawString(10, 4, buf);
+  SSD1306_Refresh();
+}</code></pre>
+
+<h3>Main: Loop principal</h3>
+<div class="code-header"><span class="code-label">C &mdash; main.c (loop I2C)</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>int main(void)
+{
+  HAL_Init();
+  SystemClock_Config();
+  MX_I2C1_Init();
+  SSD1306_Init();
+
+  while (1)
+  {
+    float temp = TMP117_ReadTemperature();
+    SSD1306_ShowTemperature(temp);
+    HAL_Delay(1000);  /* Lee cada 1 segundo */
+  }
+}</code></pre>
+
+<div class="exercise">
+<h4>Ejercicio practico</h4>
+<p>Modifica el codigo para <strong>leer cada 500 ms</strong> y mostrar el <strong>promedio de las ultimas 10 muestras</strong> en el OLED. Esto suaviza el ruido de lectura y da una lectura mas estable.</p>
+<div class="hint"><strong>Pista:</strong> Usa un buffer circular de 10 floats. En cada lectura, almacena el nuevo valor y calcula el promedio sumando todos los elementos y dividiendo por 10. Considera usar <code>snprintf()</code> para formatear el promedio con 2 decimales.</div>
+</div>
+
+<button class="btn-wokwi" onclick="openWokwi(1)">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+Exportar a Wokwi
+</button>
+</article>
+
+<!-- ==================== LECCION 2 ==================== -->
+<article class="card" id="lec2">
+<h2><span>02</span> SPI: Sensor BMP280 (Presion y Temperatura)</h2>
+
+<h3>Protocolo SPI</h3>
+<p>SPI (Serial Peripheral Interface) es un bus sincrono de comunicacion full-duplex que usa 4 senales principales:</p>
+<ul>
+<li><strong>MOSI</strong> (Master Out Slave In) &mdash; datos del master al esclavo</li>
+<li><strong>MISO</strong> (Master In Slave Out) &mdash; datos del esclavo al master</li>
+<li><strong>SCK</strong> (Serial Clock) &mdash; reloj generado por el master</li>
+<li><strong>CS</strong> (Chip Select) &mdash; activa el esclavo seleccionado (activo bajo)</li>
+</ul>
+<p>SPI opera en diferentes <strong>modos</strong> (0-3) definidos por CPOL (polaridad del reloj) y CPHA (fase de muestreo). El BMP280 usa <strong>modo 0</strong> (CPOL=0, CPHA=0).</p>
+
+<h3>Sensor BMP280</h3>
+<p>El <strong>BMP280</strong> es un sensor de presion barometrica y temperatura de Bosch. Mide presion absoluta (300-1100 hPa) con una precision de +/-1 hPa, lo que permite estimar altitud con resolucion de ~1 metro.</p>
+
+<table class="params-table">
+<tr><th>Parametro</th><th>Valor</th></tr>
+<tr><td>Registro ID</td><td>0xD0 (valor esperado: 0x58)</td></tr>
+<tr><td>Registro de control</td><td>0xF4</td></tr>
+<tr><td>Registro de configuracion</td><td>0xF5</td></tr>
+<tr><td>Datos de presion (raw)</td><td>0xF7-0xF9 (20 bits)</td></tr>
+<tr><td>Datos de temperatura (raw)</td><td>0xFA-0xFC (20 bits)</td></tr>
+<tr><td>Datos de calibracion</td><td>0x88-0xA1 (26 bytes)</td></tr>
+</table>
+
+<h3>Diagrama de conexiones</h3>
+<div class="diagram">
+<span class="label">STM32N6</span>              <span class="label">BMP280</span>
+  <span class="pin">PA5</span>(SCK)-----------<span class="wire">SCK</span>
+  <span class="pin">PA6</span>(MISO)----------<span class="wire">SDO</span>
+  <span class="pin">PA7</span>(MOSI)----------<span class="wire">SDI</span>
+  <span class="pin">PA4</span>(CS)------------<span class="wire">CSB</span>  (Chip Select, activo bajo)
+  <span class="pin">3.3V</span>---------------<span class="wire">VCC</span>
+  <span class="pin">GND</span>----------------<span class="wire">GND</span>
+</div>
+
+<h3>Codigo HAL: Inicializacion SPI1</h3>
+<div class="code-header"><span class="code-label">C &mdash; MX_SPI1_Init</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>SPI_HandleTypeDef hspi1;
+
+void MX_SPI1_Init(void)
+{
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;     /* CPOL = 0 */
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;         /* CPHA = 0 */
+  hspi1.Init.NSS = SPI_NSS_SOFT;                 /* CS por software */
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8; /* ~8 MHz */
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+
+  if (HAL_SPI_Init(&amp;hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  __HAL_RCC_SPI1_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /* PA5=SCK, PA6=MISO, PA7=MOSI */
+  GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
+  HAL_GPIO_Init(GPIOA, &amp;GPIO_InitStruct);
+
+  /* PA4=CS (software control) */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &amp;GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); /* CS idle = HIGH */
+}</code></pre>
+
+<h3>Codigo HAL: Funciones SPI para BMP280</h3>
+<div class="code-header"><span class="code-label">C &mdash; BMP280_ReadID y funciones SPI</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>#define BMP280_CS_PORT   GPIOA
+#define BMP280_CS_PIN    GPIO_PIN_4
+
+#define BMP280_REG_ID       0xD0
+#define BMP280_REG_CTRL     0xF4
+#define BMP280_REG_CONFIG   0xF5
+#define BMP280_REG_PRESS    0xF7
+#define BMP280_REG_TEMP     0xFA
+#define BMP280_REG_CALIB    0x88
+
+static void BMP280_CS_Low(void)  { HAL_GPIO_WritePin(BMP280_CS_PORT, BMP280_CS_PIN, GPIO_PIN_RESET); }
+static void BMP280_CS_High(void) { HAL_GPIO_WritePin(BMP280_CS_PORT, BMP280_CS_PIN, GPIO_PIN_SET); }
+
+static uint8_t BMP280_ReadReg(uint8_t reg)
+{
+  uint8_t tx = reg | 0x80;  /* bit 7 = 1 para lectura */
+  uint8_t rx;
+  BMP280_CS_Low();
+  HAL_SPI_TransmitReceive(&amp;hspi1, &amp;tx, &amp;rx, 1, HAL_MAX_DELAY);
+  HAL_SPI_Receive(&amp;hspi1, &amp;rx, 1, HAL_MAX_DELAY);
+  BMP280_CS_High();
+  return rx;
+}
+
+static void BMP280_ReadRegs(uint8_t reg, uint8_t* buf, uint8_t len)
+{
+  uint8_t tx = reg | 0x80;
+  BMP280_CS_Low();
+  HAL_SPI_Transmit(&amp;hspi1, &amp;tx, 1, HAL_MAX_DELAY);
+  HAL_SPI_Receive(&amp;hspi1, buf, len, HAL_MAX_DELAY);
+  BMP280_CS_High();
+}
+
+static void BMP280_WriteReg(uint8_t reg, uint8_t val)
+{
+  uint8_t tx[2] = {reg &amp; 0x7F, val};  /* bit 7 = 0 para escritura */
+  BMP280_CS_Low();
+  HAL_SPI_Transmit(&amp;hspi1, tx, 2, HAL_MAX_DELAY);
+  BMP280_CS_High();
+}
+
+uint8_t BMP280_ReadID(void)
+{
+  return BMP280_ReadReg(BMP280_REG_ID);
+  /* Debe devolver 0x58 */
+}</code></pre>
+
+<h3>Codigo HAL: Calibracion y lectura compensada</h3>
+<div class="code-header"><span class="code-label">C &mdash; BMP280_Calibration y compensacion</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>/* Parametros de calibracion del BMP280 */
+static uint16_t dig_T1;
+static int16_t  dig_T2, dig_T3;
+static uint16_t dig_P1;
+static int16_t  dig_P2, dig_P3, dig_P4, dig_P5, dig_P6, dig_P7, dig_P8, dig_P9;
+static int32_t  t_fine;
+
+void BMP280_ReadCalibration(void)
+{
+  uint8_t calib[24];
+  BMP280_ReadRegs(BMP280_REG_CALIB, calib, 24);
+
+  dig_T1 = (uint16_t)((calib[1] &lt;&lt; 8) | calib[0]);
+  dig_T2 = (int16_t) ((calib[3] &lt;&lt; 8) | calib[2]);
+  dig_T3 = (int16_t) ((calib[5] &lt;&lt; 8) | calib[4]);
+  dig_P1 = (uint16_t)((calib[7] &lt;&lt; 8) | calib[6]);
+  dig_P2 = (int16_t) ((calib[9] &lt;&lt; 8) | calib[8]);
+  dig_P3 = (int16_t) ((calib[11] &lt;&lt; 8) | calib[10]);
+  dig_P4 = (int16_t) ((calib[13] &lt;&lt; 8) | calib[12]);
+  dig_P5 = (int16_t) ((calib[15] &lt;&lt; 8) | calib[14]);
+  dig_P6 = (int16_t) ((calib[17] &lt;&lt; 8) | calib[16]);
+  dig_P7 = (int16_t) ((calib[19] &lt;&lt; 8) | calib[18]);
+  dig_P8 = (int16_t) ((calib[21] &lt;&lt; 8) | calib[20]);
+  dig_P9 = (int16_t) ((calib[23] &lt;&lt; 8) | calib[22]);
+}
+
+void BMP280_Configure(void)
+{
+  /* Modo normal, oversampling x1 temperatura, x1 presion */
+  BMP280_WriteReg(BMP280_REG_CTRL, 0x27);   /* osrs_t=1, osrs_p=1, mode=normal */
+  BMP280_WriteReg(BMP280_REG_CONFIG, 0xA0); /* t_sb=1000ms, filter=off */
+}
+
+/* Formula de compensacion de temperatura del datasheet Bosch */
+static int32_t BMP280_CompensateTemp(int32_t adc_T)
+{
+  int32_t var1, var2, T;
+  var1 = ((((adc_T &gt;&gt; 3) - ((int32_t)dig_T1 &lt;&lt; 1))) * ((int32_t)dig_T2)) &gt;&gt; 11;
+  var2 = (((((adc_T &gt;&gt; 4) - ((int32_t)dig_T1)) *
+            ((adc_T &gt;&gt; 4) - ((int32_t)dig_T1))) &gt;&gt; 12) * ((int32_t)dig_T3)) &gt;&gt; 14;
+  t_fine = var1 + var2;
+  T = (t_fine * 5 + 128) &gt;&gt; 8;
+  return T;  /* Temperatura en centesimas de C (ej: 2515 = 25.15 C) */
+}
+
+/* Formula de compensacion de presion del datasheet Bosch */
+static uint32_t BMP280_CompensatePress(int32_t adc_P)
+{
+  int64_t var1, var2, p;
+  var1 = ((int64_t)t_fine) - 128000;
+  var2 = var1 * var1 * (int64_t)dig_P6;
+  var2 = var2 + ((var1 * (int64_t)dig_P5) &lt;&lt; 17);
+  var2 = var2 + (((int64_t)dig_P4) &lt;&lt; 35);
+  var1 = ((var1 * var1 * (int64_t)dig_P3) &gt;&gt; 8) +
+         ((var1 * (int64_t)dig_P2) &lt;&lt; 12);
+  var1 = (((((int64_t)1) &lt;&lt; 47) + var1)) * ((int64_t)dig_P1) &gt;&gt; 33;
+
+  if (var1 == 0) return 0;
+
+  p = 1048576 - adc_P;
+  p = (((p &lt;&lt; 31) - var2) * 3125) / var1;
+  var1 = (((int64_t)dig_P9) * (p &gt;&gt; 13) * (p &gt;&gt; 13)) &gt;&gt; 25;
+  var2 = (((int64_t)dig_P8) * p) &gt;&gt; 19;
+  p = ((p + var1 + var2) &gt;&gt; 8) + (((int64_t)dig_P7) &lt;&lt; 4);
+
+  return (uint32_t)(p / 256);  /* Presion en Pa (divide por 100 para hPa) */
+}</code></pre>
+
+<h3>Codigo HAL: Lectura completa de presion y temperatura</h3>
+<div class="code-header"><span class="code-label">C &mdash; BMP280_ReadData</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>#include &lt;math.h&gt;
+
+void BMP280_ReadData(float* temperature, float* pressure_hPa, float* altitude)
+{
+  uint8_t buf[6];
+  int32_t adc_T, adc_P;
+
+  /* Lee temperatura y presion crudos */
+  BMP280_ReadRegs(BMP280_REG_PRESS, buf, 6);
+
+  adc_P = ((int32_t)buf[0] &lt;&lt; 12) | ((int32_t)buf[1] &lt;&lt; 4) | (buf[2] &gt;&gt; 4);
+  adc_T = ((int32_t)buf[3] &lt;&lt; 12) | ((int32_t)buf[4] &lt;&lt; 4) | (buf[5] &gt;&gt; 4);
+
+  int32_t temp_centic = BMP280_CompensateTemp(adc_T);
+  *temperature = temp_centic / 100.0f;
+
+  uint32_t press_Pa = BMP280_CompensatePress(adc_P);
+  *pressure_hPa = press_Pa / 100.0f;
+
+  /* Formula barometrica para altitud (ISA) */
+  /* h = 44330 * (1 - (P/P0)^(1/5.255)) */
+  /* P0 = 1013.25 hPa (presion al nivel del mar) */
+  *altitude = 44330.0f * (1.0f - powf(*pressure_hPa / 1013.25f, 0.1903f));
+}</code></pre>
+
+<h3>Main: Loop principal con BMP280</h3>
+<div class="code-header"><span class="code-label">C &mdash; main.c (BMP280 loop)</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>int main(void)
+{
+  HAL_Init();
+  SystemClock_Config();
+  MX_SPI1_Init();
+  MX_USART2_UART_Init();  /* Para printf por serial */
+
+  /* Verifica ID del BMP280 */
+  uint8_t id = BMP280_ReadID();
+  if (id != 0x58)
+  {
+    printf("ERROR: BMP280 ID incorrecto: 0x%02X\r\n", id);
+    Error_Handler();
+  }
+  printf("BMP280 detectado OK (ID=0x%02X)\r\n", id);
+
+  BMP280_ReadCalibration();
+  BMP280_Configure();
+
+  float temp, press, alt;
+
+  while (1)
+  {
+    BMP280_ReadData(&amp;temp, &amp;press, &amp;alt);
+    printf("T=%.2fC  P=%.2f hPa  Alt=%.1f m\r\n", temp, press, alt);
+    HAL_Delay(1000);
+  }
+}</code></pre>
+
+<div class="exercise">
+<h4>Ejercicio practico</h4>
+<p>Implementa un <strong>altimetro funcional</strong> que muestre la altitud en metros en tiempo real. Anade la capacidad de <strong>establecer una altitud de referencia</strong> con un boton (zero calibration) para medir altitud relativa.</p>
+<div class="hint"><strong>Pista:</strong> Guarda la presion actual al presionar el boton como <code>press_ref</code>. La altitud relativa se calcula como <code>44330*(1 - (P/press_ref)^0.1903)</code>. Usa una interrupcion EXTI para el boton en PC13.</div>
+</div>
+
+<button class="btn-wokwi" onclick="openWokwi(2)">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+Exportar a Wokwi
+</button>
+</article>
+
+<!-- ==================== LECCION 3 ==================== -->
+<article class="card" id="lec3">
+<h2><span>03</span> ADC: Sensor Industrial 4-20mA</h2>
+
+<h3>Senal 4-20mA (Estandar Industrial)</h3>
+<p>El lazo de corriente <strong>4-20mA</strong> es el estandar universal para transmisores industriales. La corriente se mantiene constante independientemente de la resistencia del cable, lo que lo hace inmune al ruido electromagnetico y a las caidas de voltaje en largas distancias.</p>
+<ul>
+<li><strong>4 mA</strong> &mdash; representa el valor minimo (zero live, permite detectar cable roto)</li>
+<li><strong>20 mA</strong> &mdash; representa el valor maximo del rango</li>
+<li><strong>&lt; 4 mA</strong> &mdash; indica fallo (cable roto)</li>
+<li><strong>&gt; 20 mA</strong> &mdash; indica corto o sobre-rango</li>
+</ul>
+
+<h3>Circuito de acondicionamiento</h3>
+<p>Para leer 4-20mA con un ADC de voltaje, se usa un <strong>resistor shunt de 250</strong> que convierte la corriente en voltaje:</p>
+<ul>
+<li>4 mA * 250 = <strong>1.0 V</strong> (minimo)</li>
+<li>20 mA * 250 = <strong>5.0 V</strong> (maximo)</li>
+</ul>
+<p>Como el ADC del STM32N6 opera a <strong>3.3V</strong>, necesitamos un <strong>divisor resistivo</strong> o un resistor de valor menor. Usamos un divisor 3.3V/5V para escalar el rango:</p>
+
+<h3>Diagrama del circuito completo</h3>
+<div class="diagram">
+<span class="label">Circuito de acondicionamiento 4-20mA</span>
+
+  +24V               +3.3V (ref ADC)
+    |                    |
+   [Sensor]            [250]  &lt;--- Resistor shunt
+    | (4-20mA)           |
+    +--------------------+-----&gt; [Divisor 3.3V/5V] -----&gt; PA0 (ADC1_IN0)
+    |                                         |
+   GND                                       GND
+
+<span class="label">Divisor resistivo (escala 5V a 3.3V):</span>
+  Vout = Vin * (R2 / (R1 + R2))  con R1=10k, R2=20k  =&gt;  ratio = 0.667
+  5.0V * 0.667 = 3.33V (dentro del rango del ADC)
+
+<span class="pin">STM32N6</span>              <span class="label">Circuito externo</span>
+  <span class="pin">PA0</span>(ADC1_IN0)&lt;-------Vout del divisor
+  <span class="pin">3.3V</span>----------------VCC sensor / pull-ups
+  <span class="pin">GND</span>-----------------GND comun
+</div>
+
+<div class="note"><strong>Nota practica:</strong> En produccion industrial se usa un resistor de precision de 0.1% (250) y un amplificador de instrumentacion para aislamiento galvanico. En este modulo simplificamos con un divisor resistivo.</div>
+
+<h3>Codigo HAL: Inicializacion ADC</h3>
+<div class="code-header"><span class="code-label">C &mdash; MX_ADC1_Init</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>ADC_HandleTypeDef hadc1;
+
+void MX_ADC1_Init(void)
+{
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;        /* 0-4095 */
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;        /* Un solo canal */
+  hadc1.Init.ContinuousConvMode = DISABLE;           /* Trigger manual */
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+
+  if (HAL_ADC_Init(&amp;hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* Configura canal IN0 en PA0 */
+  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;  /* Maxima precision */
+
+  if (HAL_ADC_ConfigChannel(&amp;hadc1, &amp;sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  __HAL_RCC_ADC1_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /* PA0 = ADC1_IN0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &amp;GPIO_InitStruct);
+}</code></pre>
+
+<h3>Codigo HAL: Lectura y conversion a presion</h3>
+<div class="code-header"><span class="code-label">C &mdash; Sensor4_20_Read</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>#include &lt;stdint.h&gt;
+
+/* Parametros del sistema */
+#define ADC_RESOLUTION    4095.0f   /* 12 bits */
+#define ADC_VREF          3.3f      /* Voltaje de referencia */
+#define V_MIN             1.0f      /* 4mA * 250 */
+#define V_MAX             5.0f      /* 20mA * 250 */
+#define P_MIN             0.0f      /* PSI minimo */
+#define P_MAX             100.0f    /* PSI maximo (rango del sensor) */
+#define DIVISOR_RATIO     0.667f    /* 3.3V/5V = 0.667 */
+
+/* Parametros de calibracion (ajustables) */
+static float cal_offset = 0.0f;
+static float cal_gain   = 1.0f;
+
+uint16_t ADC_ReadRaw(void)
+{
+  HAL_ADC_Start(&amp;hadc1);
+  HAL_ADC_PollForConversion(&amp;hadc1, HAL_MAX_DELAY);
+  uint16_t raw = HAL_ADC_GetValue(&amp;hadc1);
+  HAL_ADC_Stop(&amp;hadc1);
+  return raw;
+}
+
+/* Filtro de promedio movil de 16 muestras */
+#define FILTER_SIZE 16
+
+float ADC_ReadFiltered(void)
+{
+  static uint16_t buffer[FILTER_SIZE] = {0};
+  static uint8_t idx = 0;
+  static uint8_t filled = 0;
+  uint32_t sum = 0;
+
+  buffer[idx] = ADC_ReadRaw();
+  idx = (idx + 1) % FILTER_SIZE;
+  if (idx == 0) filled = 1;
+
+  uint8_t count = filled ? FILTER_SIZE : idx;
+  for (uint8_t i = 0; i &lt; count; i++)
+    sum += buffer[i];
+
+  return (float)sum / count;
+}
+
+float RawToVoltage(uint16_t raw)
+{
+  /* Convierte raw a voltaje en el ADC (0-3.3V) */
+  float v_adc = (raw / ADC_RESOLUTION) * ADC_VREF;
+  /* Compensa el divisor resistivo para obtener el voltaje real */
+  float v_real = v_adc / DIVISOR_RATIO;
+  return v_real;
+}
+
+float VoltageToPressure(float voltage)
+{
+  /* Ecuacion lineal: P = ((V - Vmin) / (Vmax - Vmin)) * (Pmax - Pmin) + Pmin */
+  if (voltage &lt; V_MIN) voltage = V_MIN;
+  if (voltage &gt; V_MAX) voltage = V_MAX;
+
+  float pressure = ((voltage - V_MIN) / (V_MAX - V_MIN)) * (P_MAX - P_MIN) + P_MIN;
+
+  /* Aplica calibracion */
+  pressure = (pressure + cal_offset) * cal_gain;
+
+  return pressure;
+}
+
+float Sensor_ReadPressure(void)
+{
+  float raw_avg = ADC_ReadFiltered();
+  float voltage = RawToVoltage((uint16_t)raw_avg);
+  float pressure = VoltageToPressure(voltage);
+  return pressure;
+}
+
+/* Funcion de calibracion: ajusta offset con sensor en valor conocido */
+void Sensor_CalibrateOffset(float known_pressure_psi)
+{
+  float raw_avg = ADC_ReadFiltered();
+  float voltage = RawToVoltage((uint16_t)raw_avg);
+  float measured = VoltageToPressure(voltage);
+  cal_offset = known_pressure_psi - measured;
+}
+
+/* Funcion de calibracion: ajusta ganancia con dos puntos */
+void Sensor_CalibrateGain(float p1_measured, float p1_actual,
+                           float p2_measured, float p2_actual)
+{
+  if (p2_measured != p1_measured)
+    cal_gain = (p2_actual - p1_actual) / (p2_measured - p1_measured);
+}</code></pre>
+
+<h3>Codigo HAL: Deteccion de fallos</h3>
+<div class="code-header"><span class="code-label">C &mdash; Sensor4_20_CheckFault</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>typedef enum {
+  SENSOR_OK = 0,
+  SENSOR_FAULT_OPEN,     /* Cable roto: &lt; 4mA */
+  SENSOR_FAULT_SHORT,    /* Sensor en corto: &gt; 20mA */
+  SENSOR_FAULT_OVERRANGE /* Fuera de rango */
+} SensorStatus_t;
+
+#define I_MIN_mA    4.0f
+#define I_MAX_mA    20.0f
+#define I_FAULT_LOW 3.5f   /* Umbral para cable roto */
+#define I_FAULT_HIGH 22.0f /* Umbral para corto */
+
+/* Convierte voltaje a corriente estimada */
+float VoltageToCurrent(float voltage)
+{
+  /* I = V / R_shunt */
+  return (voltage / 250.0f) * 1000.0f; /* en mA */
+}
+
+SensorStatus_t Sensor_CheckFault(float* out_current_mA)
+{
+  float raw_avg = ADC_ReadFiltered();
+  float v_adc = (raw_avg / ADC_RESOLUTION) * ADC_VREF;
+  float v_real = v_adc / DIVISOR_RATIO;
+  float current_mA = VoltageToCurrent(v_real);
+
+  if (out_current_mA) *out_current_mA = current_mA;
+
+  if (current_mA &lt; I_FAULT_LOW)
+    return SENSOR_FAULT_OPEN;   /* Cable roto o desconectado */
+
+  if (current_mA &gt; I_FAULT_HIGH)
+    return SENSOR_FAULT_SHORT;  /* Sensor en corto */
+
+  if (current_mA &lt; I_MIN_mA - 0.5f || current_mA &gt; I_MAX_mA + 0.5f)
+    return SENSOR_FAULT_OVERRANGE;
+
+  return SENSOR_OK;
+}
+
+const char* SensorStatusToString(SensorStatus_t status)
+{
+  switch (status)
+  {
+    case SENSOR_OK:            return "OK";
+    case SENSOR_FAULT_OPEN:    return "FALLO: Cable roto";
+    case SENSOR_FAULT_SHORT:   return "FALLO: Sensor en corto";
+    case SENSOR_FAULT_OVERRANGE: return "FALLO: Fuera de rango";
+    default:                   return "Desconocido";
+  }
+}</code></pre>
+
+<h3>Main: Loop con monitoreo</h3>
+<div class="code-header"><span class="code-label">C &mdash; main.c (ADC loop)</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>int main(void)
+{
+  HAL_Init();
+  SystemClock_Config();
+  MX_ADC1_Init();
+  MX_USART2_UART_Init();
+
+  printf("Sensor 4-20mA iniciado\r\n");
+
+  float current_mA;
+  SensorStatus_t status;
+
+  while (1)
+  {
+    status = Sensor_CheckFault(&amp;current_mA);
+
+    if (status == SENSOR_OK)
+    {
+      float pressure = Sensor_ReadPressure();
+      printf("Presion: %.1f PSI  Corriente: %.2f mA  [OK]\r\n",
+             pressure, current_mA);
+    }
+    else
+    {
+      printf("ALARMA: %s  Corriente: %.2f mA\r\n",
+             SensorStatusToString(status), current_mA);
+    }
+
+    HAL_Delay(500);
+  }
+}</code></pre>
+
+<div class="exercise">
+<h4>Ejercicio practico</h4>
+<p>Implementa la <strong>deteccion completa de fallos</strong>: si la corriente es menor a 4mA, reporta "cable roto"; si es mayor a 20mA, reporta "sensor en corto". Anade un <strong>LED indicador</strong> que parpadee con patrones diferentes para cada tipo de fallo (2 destellos = cable roto, 3 destellos = corto).</p>
+<div class="hint"><strong>Pista:</strong> Usa <code>HAL_GPIO_WritePin()</code> para controlar un LED en PC13 (activo bajo en Nucleo). Crea una maquina de estados simple con <code>HAL_GetTick()</code> para generar los patrones de parpadeo sin bloquear el programa.</div>
+</div>
+
+<button class="btn-wokwi" onclick="openWokwi(3)">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+Exportar a Wokwi
+</button>
+</article>
+
+<!-- ==================== LECCION 4 ==================== -->
+<article class="card" id="lec4">
+<h2><span>04</span> DMA para Adquisicion Continua</h2>
+
+<h3>Que es DMA?</h3>
+<p><strong>DMA</strong> (Direct Memory Access) es un controlador independiente de la CPU que transfiere datos directamente entre perifericos y memoria RAM sin intervencion del procesador. Esto libera la CPU para ejecutar otras tareas mientras los datos se adquieren en segundo plano.</p>
+<ul>
+<li><strong>Ventaja 1:</strong> La CPU no gasta ciclos en transferir datos byte a byte</li>
+<li><strong>Ventaja 2:</strong> Se pueden adquirir muestras a alta frecuencia sin perder datos</li>
+<li><strong>Ventaja 3:</strong> Modo circular permite adquisicion continua sin pausas</li>
+</ul>
+
+<h3>Diagrama de flujo DMA</h3>
+<div class="diagram">
+<span class="label">Flujo de datos con DMA (sin intervencion de CPU)</span>
+
+  +--------+        +-----+        +-----+        +--------+
+  | Sensor |-------&gt;| ADC |-------&gt;| DMA |-------&gt;|  RAM   |
+  | Analog |        | 12b |        | CH1 |        | Buffer |
+  +--------+        +-----+        +-----+        | 64 smpl|
+                                                  +--------+
+                                                     |
+                              +----------------------+
+                              |
+  +--------+        +---------v--------+
+  |   CPU  |&lt;-------| Callback (RMS)   |
+  |Procesa |        | - Half Complete  |
+  | datos  |        | - Full Complete  |
+  +--------+        +------------------+
+
+<span class="label">Modo Circular:</span> Cuando el DMA llena el buffer, vuelve
+automaticamente al inicio sin detenerse.
+</div>
+
+<div class="note"><strong>Nota:</strong> En el STM32N6, el DMA tiene acceso a toda la memoria (incluida la SRAM externa) mediante su bus dedicado AHB. El ADC puede disparar el DMA automaticamente al final de cada conversion.</div>
+
+<h3>Codigo HAL: Inicializacion DMA</h3>
+<div class="code-header"><span class="code-label">C &mdash; MX_DMA_Init</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>DMA_HandleTypeDef hdma_adc1;
+
+void MX_DMA_Init(void)
+{
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  hdma_adc1.Instance = DMA1_Channel1;
+  hdma_adc1.Init.Request = DMA_REQUEST_ADC1;
+  hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
+  hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
+  hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
+  hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD; /* 16 bits */
+  hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+  hdma_adc1.Init.Mode = DMA_CIRCULAR;  /* Modo circular: buffer rotativo */
+  hdma_adc1.Init.Priority = DMA_PRIORITY_HIGH;
+
+  if (HAL_DMA_Init(&amp;hdma_adc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* Vincula el DMA al ADC */
+  __HAL_LINKDMA(&amp;hadc1, DMA_Handle, hdma_adc1);
+
+  /* Habilita interrupciones del DMA */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+}
+
+void DMA1_Channel1_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&amp;hdma_adc1);
+}</code></pre>
+
+<h3>Codigo HAL: ADC con trigger DMA</h3>
+<div class="code-header"><span class="code-label">C &mdash; MX_ADC1_Init con DMA</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>#define ADC_BUFFER_SIZE 64
+
+static uint16_t adc_buffer[ADC_BUFFER_SIZE];
+
+void MX_ADC1_DMA_Init(void)
+{
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;        /* Conversion continua */
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;     /* DMA requests continuos */
+
+  if (HAL_ADC_Init(&amp;hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sConfig.Channel = ADC_CHANNEL_0;  /* PA0 */
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_84CYCLES;
+
+  if (HAL_ADC_ConfigChannel(&amp;hadc1, &amp;sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  HAL_ADC_MspInit(&amp;hadc1);  /* Inicializa GPIO */
+  MX_DMA_Init();            /* Inicializa DMA */
+}
+
+void ADC_StartDMA(void)
+{
+  HAL_ADC_Start_DMA(&amp;hadc1, (uint32_t*)adc_buffer, ADC_BUFFER_SIZE);
+}</code></pre>
+
+<h3>Codigo HAL: Callbacks y calculo de RMS</h3>
+<div class="code-header"><span class="code-label">C &mdash; Callbacks DMA + RMS</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>#include &lt;math.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+
+static volatile uint8_t adc_half_complete = 0;
+static volatile uint8_t adc_full_complete = 0;
+static volatile float rms_value = 0.0f;
+
+/* Se llama cuando la primera mitad del buffer esta llena */
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
+{
+  if (hadc-&gt;Instance == ADC1)
+  {
+    adc_half_complete = 1;
+  }
+}
+
+/* Se llama cuando el buffer completo esta lleno */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+  if (hadc-&gt;Instance == ADC1)
+  {
+    adc_full_complete = 1;
+  }
+}
+
+/* Calcula RMS sobre un bloque de muestras */
+float CalculateRMS(uint16_t* samples, uint16_t count)
+{
+  float sum_sq = 0.0f;
+  float voltage;
+
+  for (uint16_t i = 0; i &lt; count; i++)
+  {
+    /* Convierte raw a voltaje */
+    voltage = (samples[i] / 4095.0f) * 3.3f;
+    sum_sq += voltage * voltage;
+  }
+
+  return sqrtf(sum_sq / count);
+}
+
+/* Procesa las muestras listas y opcionalmente las muestra */
+void ProcessADCData(void)
+{
+  if (adc_half_complete)
+  {
+    adc_half_complete = 0;
+    /* Procesa primera mitad (muestras 0 a 31) */
+    float rms_first = CalculateRMS(&amp;adc_buffer[0], ADC_BUFFER_SIZE / 2);
+    printf("RMS[0-31]: %.3f V  ", rms_first);
+
+    /* Muestra las ultimas 16 muestras en formato osciloscopio ASCII */
+    PrintWaveform(&amp;adc_buffer[0], ADC_BUFFER_SIZE / 2);
+  }
+
+  if (adc_full_complete)
+  {
+    adc_full_complete = 0;
+    /* Procesa segunda mitad (muestras 32 a 63) */
+    float rms_second = CalculateRMS(&amp;adc_buffer[ADC_BUFFER_SIZE / 2], ADC_BUFFER_SIZE / 2);
+    printf("RMS[32-63]: %.3f V\r\n", rms_second);
+
+    rms_value = rms_second;  /* Valor RMS actualizado */
+  }
+}
+
+/* Visualizador ASCII tipo osciloscopio */
+void PrintWaveform(uint16_t* samples, uint16_t count)
+{
+  /* Muestra las ultimas 16 muestras como grafico ASCII */
+  uint16_t display_count = (count &gt; 16) ? 16 : count;
+  char line[64];
+
+  printf("Waveform: ");
+  for (uint16_t i = 0; i &lt; display_count; i++)
+  {
+    uint16_t idx = (count &gt; 16) ? (count - 16 + i) : i;
+    int bar = (int)((samples[idx] * 30) / 4095);  /* Escala a 0-30 */
+    if (bar &gt; 29) bar = 29;
+    memset(line, ' ', 30);
+    line[bar] = '*';
+    line[30] = '\0';
+    printf("|%s| ", line);
+  }
+  printf("\r\n");
+}</code></pre>
+
+<h3>Main: Adquisicion continua con DMA</h3>
+<div class="code-header"><span class="code-label">C &mdash; main.c (DMA loop)</span><button class="btn-copy" onclick="copyBlock(this)">Copiar</button></div>
+<pre><code>int main(void)
+{
+  HAL_Init();
+  SystemClock_Config();
+  MX_ADC1_DMA_Init();
+  MX_USART2_UART_Init();
+
+  printf("ADC + DMA continuo iniciado\r\n");
+  printf("Buffer: %d muestras @ 12-bit\r\n\r\n", ADC_BUFFER_SIZE);
+
+  /* Inicia la adquisicion continua via DMA */
+  ADC_StartDMA();
+
+  while (1)
+  {
+    ProcessADCData();
+
+    /* Aqui la CPU esta libre para otras tareas */
+    /* Por ejemplo: procesamiento de red, comunicacion, control */
+
+    HAL_Delay(10);  /* Pequena pausa para no saturar UART */
+  }
+}
+
+/* Handler de error */
+void Error_Handler(void)
+{
+  __disable_irq();
+  while (1)
+  {
+    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);  /* LED de error */
+    HAL_Delay(100);
+  }
+}</code></pre>
+
+<div class="exercise">
+<h4>Ejercicio practico</h4>
+<p>Implementa un <strong>osciloscopio basico por terminal</strong> que muestre las ultimas 64 muestras en formato ASCII grafico. El eje Y debe representar el voltaje (0-3.3V) y el eje X el tiempo. Anade calculo de <strong>frecuencia</strong> detectando cruces por cero.</p>
+<div class="hint"><strong>Pista:</strong> Usa caracteres '|', '_' y '*' para dibujar la forma de onda. Para detectar frecuencia, cuenta los cruces por cero (de negativo a positivo) en el buffer y multiplica por la tasa de muestreo dividida por el numero de muestras. La tasa de muestreo del ADC = f_ADC_clock / (prescaler + sample_time + resolution_bits).</div>
+</div>
+
+<button class="btn-wokwi" onclick="openWokwi(4)">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+Exportar a Wokwi
+</button>
+</article>
+
+<footer>
+<p>STM32N6 Industrial Academy &mdash; Modulo 2: Sensores e Interfaces</p>
+<p style="margin-top:4px;font-size:.75rem;">Generado para formacion embebida industrial con HAL y Wokwi</p>
+</footer>
+
+</div><!-- /container -->
+
+<!-- ==================== MODAL WOKWI ==================== -->
+<div class="modal-overlay" id="wokwiModal">
+<div class="modal">
+<div class="modal-header">
+<h3 id="modalTitle">Exportar a Wokwi</h3>
+<button class="modal-close" onclick="closeWokwi()">&times;</button>
+</div>
+<div class="modal-tabs">
+<button class="modal-tab active" onclick="switchTab(0)">diagram.json</button>
+<button class="modal-tab" onclick="switchTab(1)">main.cpp</button>
+</div>
+<div class="modal-body">
+<div class="modal-panel active" id="panel0">
+<button class="btn-copy" onclick="copyModalCode(0)">Copiar</button>
+<pre><code id="codeDiagram"></code></pre>
+</div>
+<div class="modal-panel" id="panel1">
+<button class="btn-copy" onclick="copyModalCode(1)">Copiar</button>
+<pre><code id="codeMain"></code></pre>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const wokwiData={
+1:{
+title:"Wokwi: I2C TMP117 + OLED SSD1306",
+diagram:`{\n  "version": 1,\n  "author": "STM32N6 Academy",\n  "editor": "wokwi",\n  "parts": [\n    { "type": "board-st-nucleo-wb55", "id": "stm32", "top": 0, "left": 0 },\n    { "type": "wokwi-tmp117", "id": "tmp117", "top": -60, "left": 180 },\n    { "type": "wokwi-ssd1306", "id": "oled", "top": 80, "left": 180 }\n  ],\n  "connections": [\n    ["stm32:PB6", "tmp117:SCL", "green", ["h30", "v-20"]],\n    ["stm32:PB7", "tmp117:SDA", "blue", ["h40", "v-10"]],\n    ["stm32:3.3V", "tmp117:V+", "red", ["h50", "v-30"]],\n    ["stm32:GND", "tmp117:GND", "black", ["h60", "v-20"]],\n    ["stm32:PB6", "oled:SCL", "green", ["h30", "v40"]],\n    ["stm32:PB7", "oled:SDA", "blue", ["h40", "v50"]],\n    ["stm32:3.3V", "oled:VIN", "red", ["h50", "v60"]],\n    ["stm32:GND", "oled:GND", "black", ["h60", "v70"]]\n  ],\n  "dependencies": {}\n}`,
+main:`#include "stm32wbxx_hal.h"\n#include &lt;stdio.h&gt;\n#include &lt;string.h&gt;\n\nI2C_HandleTypeDef hi2c1;\n\n#define TMP117_ADDR     (0x48 &lt;&lt; 1)\n#define TMP117_TEMP_REG 0x00\n#define SSD1306_ADDR    (0x3C &lt;&lt; 1)\n\nstatic uint8_t oled_buf[8][128];\n\nvoid SystemClock_Config(void);\nstatic void MX_I2C1_Init(void);\n\nstatic void SSD1306_WriteCmd(uint8_t cmd) {\n  uint8_t b[2] = {0x00, cmd};\n  HAL_I2C_Master_Transmit(&amp;hi2c1, SSD1306_ADDR, b, 2, 100);\n}\n\nvoid SSD1306_Init(void) {\n  HAL_Delay(100);\n  const uint8_t cmds[] = {\n    0xAE,0x20,0x00,0xB0,0xC8,0x00,0x10,0x40,\n    0x81,0xFF,0xA1,0xA6,0xA8,0x3F,0xA4,0xD3,0x00,\n    0xD5,0xF0,0xD9,0x22,0xDA,0x12,0xDB,0x20,0x8D,0x14,0xAF\n  };\n  for (int i = 0; i &lt; sizeof(cmds); i++) SSD1306_WriteCmd(cmds[i]);\n}\n\nvoid SSD1306_Clear(void) {\n  memset(oled_buf, 0, sizeof(oled_buf));\n  for (int p = 0; p &lt; 8; p++) {\n    SSD1306_WriteCmd(0xB0 + p);\n    SSD1306_WriteCmd(0x00); SSD1306_WriteCmd(0x10);\n    uint8_t d[129] = {0x40};\n    HAL_I2C_Master_Transmit(&amp;hi2c1, SSD1306_ADDR, d, 129, 100);\n  }\n}\n\nfloat TMP117_Read(void) {\n  uint8_t reg = TMP117_TEMP_REG, buf[2];\n  int16_t raw;\n  HAL_I2C_Master_Transmit(&amp;hi2c1, TMP117_ADDR, &amp;reg, 1, 100);\n  HAL_I2C_Master_Receive(&amp;hi2c1, TMP117_ADDR, buf, 2, 100);\n  raw = (int16_t)((buf[0] &lt;&lt; 8) | buf[1]);\n  return raw * 0.0078125f;\n}\n\nint main(void) {\n  HAL_Init();\n  SystemClock_Config();\n  MX_I2C1_Init();\n  SSD1306_Init();\n  SSD1306_Clear();\n\n  while (1) {\n    float t = TMP117_Read();\n    (void)t;\n    HAL_Delay(1000);\n  }\n}\n\nstatic void MX_I2C1_Init(void) {\n  hi2c1.Instance = I2C1;\n  hi2c1.Init.Timing = 0x00303D5B;\n  hi2c1.Init.OwnAddress1 = 0;\n  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;\n  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;\n  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;\n  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;\n  HAL_I2C_Init(&amp;hi2c1);\n  HAL_I2CEx_ConfigAnalogFilter(&amp;hi2c1, I2C_ANALOGFILTER_ENABLE);\n}`
+},
+2:{
+title:"Wokwi: SPI BMP280",
+diagram:`{\n  "version": 1,\n  "author": "STM32N6 Academy",\n  "editor": "wokwi",\n  "parts": [\n    { "type": "board-st-nucleo-wb55", "id": "stm32", "top": 0, "left": 0 },\n    { "type": "wokwi-bmp280", "id": "bmp280", "top": -40, "left": 200 }\n  ],\n  "connections": [\n    ["stm32:PA5", "bmp280:SCK", "green", ["h20", "v-30"]],\n    ["stm32:PA6", "bmp280:SDO", "orange", ["h30", "v-20"]],\n    ["stm32:PA7", "bmp280:SDI", "blue", ["h40", "v-10"]],\n    ["stm32:PA4", "bmp280:CSB", "gray", ["h50", "v-40"]],\n    ["stm32:3.3V", "bmp280:VIN", "red", ["h60", "v-50"]],\n    ["stm32:GND", "bmp280:GND", "black", ["h70", "v-60"]]\n  ],\n  "dependencies": {}\n}`,
+main:`#include "stm32wbxx_hal.h"\n#include &lt;stdio.h&gt;\n#include &lt;math.h&gt;\n\nSPI_HandleTypeDef hspi1;\n\n#define BMP280_CS_PORT  GPIOA\n#define BMP280_CS_PIN   GPIO_PIN_4\n#define BMP280_REG_ID   0xD0\n#define BMP280_REG_CTRL 0xF4\n#define BMP280_REG_CAL  0x88\n\nstatic uint16_t dig_T1; static int16_t dig_T2, dig_T3;\nstatic uint16_t dig_P1; static int16_t dig_P2, dig_P3, dig_P4, dig_P5, dig_P6, dig_P7, dig_P8, dig_P9;\nstatic int32_t t_fine;\n\nvoid BMP280_CS_Low(void)  { HAL_GPIO_WritePin(BMP280_CS_PORT, BMP280_CS_PIN, GPIO_PIN_RESET); }\nvoid BMP280_CS_High(void) { HAL_GPIO_WritePin(BMP280_CS_PORT, BMP280_CS_PIN, GPIO_PIN_SET); }\n\nuint8_t BMP280_ReadReg(uint8_t reg) {\n  uint8_t tx = reg | 0x80, rx;\n  BMP280_CS_Low();\n  HAL_SPI_TransmitReceive(&amp;hspi1, &amp;tx, &amp;rx, 1, 100);\n  HAL_SPI_Receive(&amp;hspi1, &amp;rx, 1, 100);\n  BMP280_CS_High(); return rx;\n}\n\nvoid BMP280_ReadRegs(uint8_t reg, uint8_t* buf, uint8_t len) {\n  uint8_t tx = reg | 0x80;\n  BMP280_CS_Low();\n  HAL_SPI_Transmit(&amp;hspi1, &amp;tx, 1, 100);\n  HAL_SPI_Receive(&amp;hspi1, buf, len, 100);\n  BMP280_CS_High();\n}\n\nvoid BMP280_WriteReg(uint8_t reg, uint8_t val) {\n  uint8_t tx[2] = {reg &amp; 0x7F, val};\n  BMP280_CS_Low();\n  HAL_SPI_Transmit(&amp;hspi1, tx, 2, 100);\n  BMP280_CS_High();\n}\n\nvoid BMP280_ReadCalib(void) {\n  uint8_t c[24]; BMP280_ReadRegs(BMP280_REG_CAL, c, 24);\n  dig_T1 = (c[1]&lt;&lt;8)|c[0]; dig_T2 = (c[3]&lt;&lt;8)|c[2]; dig_T3 = (c[5]&lt;&lt;8)|c[4];\n  dig_P1 = (c[7]&lt;&lt;8)|c[6]; dig_P2 = (c[9]&lt;&lt;8)|c[8]; dig_P3 = (c[11]&lt;&lt;8)|c[10];\n  dig_P4 = (c[13]&lt;&lt;8)|c[12]; dig_P5 = (c[15]&lt;&lt;8)|c[14]; dig_P6 = (c[17]&lt;&lt;8)|c[16];\n  dig_P7 = (c[19]&lt;&lt;8)|c[18]; dig_P8 = (c[21]&lt;&lt;8)|c[20]; dig_P9 = (c[23]&lt;&lt;8)|c[22];\n}\n\nint32_t BMP280_CompT(int32_t a) {\n  int32_t v1 = ((((a&gt;&gt;3)-((int32_t)dig_T1&lt;&lt;1)))*((int32_t)dig_T2))&gt;&gt;11;\n  int32_t v2 = (((((a&gt;&gt;4)-((int32_t)dig_T1))*((a&gt;&gt;4)-((int32_t)dig_T1)))&gt;&gt;12)*((int32_t)dig_T3))&gt;&gt;14;\n  t_fine = v1 + v2; return (t_fine*5+128)&gt;&gt;8;\n}\n\nint main(void) {\n  HAL_Init(); SystemClock_Config();\n  hspi1.Instance = SPI1; hspi1.Init.Mode = SPI_MODE_MASTER;\n  hspi1.Init.Direction = SPI_DIRECTION_2LINES; hspi1.Init.DataSize = SPI_DATASIZE_8BIT;\n  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW; hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;\n  hspi1.Init.NSS = SPI_NSS_SOFT; hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;\n  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB; HAL_SPI_Init(&amp;hspi1);\n\n  __HAL_RCC_GPIOA_CLK_ENABLE();\n  GPIO_InitTypeDef g = {0};\n  g.Pin = GPIO_PIN_4; g.Mode = GPIO_MODE_OUTPUT_PP; g.Pull = GPIO_PULLUP;\n  HAL_GPIO_Init(GPIOA, &amp;g); BMP280_CS_High();\n\n  uint8_t id = BMP280_ReadReg(BMP280_REG_ID);\n  BMP280_ReadCalib();\n  BMP280_WriteReg(BMP280_REG_CTRL, 0x27);\n\n  while (1) {\n    uint8_t b[6]; BMP280_ReadRegs(0xF7, b, 6);\n    int32_t aT = ((b[3]&lt;&lt;12)|(b[4]&lt;&lt;4)|(b[5]&gt;&gt;4));\n    int32_t temp = BMP280_CompT(aT);\n    (void)id; (void)temp;\n    HAL_Delay(1000);\n  }\n}`
+},
+3:{
+title:"Wokwi: ADC 4-20mA",
+diagram:`{\n  "version": 1,\n  "author": "STM32N6 Academy",\n  "editor": "wokwi",\n  "parts": [\n    { "type": "board-st-nucleo-wb55", "id": "stm32", "top": 0, "left": 0 },\n    { "type": "wokwi-potentiometer", "id": "pot1", "top": -60, "left": 180 }\n  ],\n  "connections": [\n    ["pot1:SIG", "stm32:PA0", "blue", ["h20", "v30"]],\n    ["pot1:GND", "stm32:GND", "black", ["h40", "v40"]],\n    ["pot1:VCC", "stm32:3.3V", "red", ["h50", "v50"]]\n  ],\n  "dependencies": {}\n}`,
+main:`#include "stm32wbxx_hal.h"\n#include &lt;stdio.h&gt;\n\nADC_HandleTypeDef hadc1;\n\n#define ADC_RESOLUTION 4095.0f\n#define ADC_VREF       3.3f\n#define V_MIN          1.0f\n#define V_MAX          5.0f\n#define P_MIN          0.0f\n#define P_MAX          100.0f\n#define DIVISOR_RATIO  0.667f\n\nstatic float cal_offset = 0.0f;\nstatic float cal_gain = 1.0f;\n\nuint16_t ADC_ReadRaw(void) {\n  HAL_ADC_Start(&amp;hadc1);\n  HAL_ADC_PollForConversion(&amp;hadc1, HAL_MAX_DELAY);\n  uint16_t v = HAL_ADC_GetValue(&amp;hadc1);\n  HAL_ADC_Stop(&amp;hadc1);\n  return v;\n}\n\n#define FILTER_SIZE 16\nfloat ADC_ReadFiltered(void) {\n  static uint16_t buf[FILTER_SIZE] = {0};\n  static uint8_t idx = 0, filled = 0;\n  uint32_t sum = 0;\n  buf[idx] = ADC_ReadRaw();\n  idx = (idx + 1) % FILTER_SIZE;\n  if (idx == 0) filled = 1;\n  uint8_t c = filled ? FILTER_SIZE : idx;\n  for (uint8_t i = 0; i &lt; c; i++) sum += buf[i];\n  return (float)sum / c;\n}\n\nfloat RawToVoltage(uint16_t r) {\n  return ((r / ADC_RESOLUTION) * ADC_VREF) / DIVISOR_RATIO;\n}\n\nfloat VoltageToPressure(float v) {\n  if (v &lt; V_MIN) v = V_MIN; if (v &gt; V_MAX) v = V_MAX;\n  return (((v - V_MIN) / (V_MAX - V_MIN)) * (P_MAX - P_MIN) + P_MIN) * cal_gain + cal_offset;\n}\n\nfloat Sensor_ReadPressure(void) {\n  return VoltageToPressure(RawToVoltage((uint16_t)ADC_ReadFiltered()));\n}\n\ntypedef enum { SENSOR_OK=0, SENSOR_FAULT_OPEN, SENSOR_FAULT_SHORT } SensorStatus_t;\n\nSensorStatus_t Sensor_CheckFault(float* out_mA) {\n  float v_adc = (ADC_ReadFiltered() / ADC_RESOLUTION) * ADC_VREF;\n  float v_real = v_adc / DIVISOR_RATIO;\n  float current = (v_real / 250.0f) * 1000.0f;\n  if (out_mA) *out_mA = current;\n  if (current &lt; 3.5f) return SENSOR_FAULT_OPEN;\n  if (current &gt; 22.0f) return SENSOR_FAULT_SHORT;\n  return SENSOR_OK;\n}\n\nconst char* StatusStr(SensorStatus_t s) {\n  switch(s) { case SENSOR_OK: return "OK"; case SENSOR_FAULT_OPEN: return "Cable roto";\n    case SENSOR_FAULT_SHORT: return "Corto"; default: return "?"; }\n}\n\nint main(void) {\n  HAL_Init(); SystemClock_Config();\n  __HAL_RCC_ADC1_CLK_ENABLE(); __HAL_RCC_GPIOA_CLK_ENABLE();\n  GPIO_InitTypeDef g = {0};\n  g.Pin = GPIO_PIN_0; g.Mode = GPIO_MODE_ANALOG; g.Pull = GPIO_NOPULL;\n  HAL_GPIO_Init(GPIOA, &amp;g);\n  hadc1.Instance = ADC1; hadc1.Init.Resolution = ADC_RESOLUTION_12B;\n  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT; HAL_ADC_Init(&amp;hadc1);\n  ADC_ChannelConfTypeDef c = {0};\n  c.Channel = ADC_CHANNEL_0; c.Rank = ADC_REGULAR_RANK_1;\n  c.SamplingTime = ADC_SAMPLETIME_480CYCLES; HAL_ADC_ConfigChannel(&amp;hadc1, &amp;c);\n\n  while (1) {\n    float mA; SensorStatus_t st = Sensor_CheckFault(&amp;mA);\n    if (st == SENSOR_OK) printf("P=%.1f PSI  I=%.2fmA [OK]\\r\\n", Sensor_ReadPressure(), mA);\n    else printf("ALARMA: %s  I=%.2fmA\\r\\n", StatusStr(st), mA);\n    HAL_Delay(500);\n  }\n}`
+},
+4:{
+title:"Wokwi: DMA Adquisicion Continua",
+diagram:`{\n  "version": 1,\n  "author": "STM32N6 Academy",\n  "editor": "wokwi",\n  "parts": [\n    { "type": "board-st-nucleo-wb55", "id": "stm32", "top": 0, "left": 0 },\n    { "type": "wokwi-function-generator", "id": "fgen", "top": -80, "left": 200 },\n    { "type": "wokwi-oscilloscope", "id": "scope", "top": 120, "left": 200 }\n  ],\n  "connections": [\n    ["fgen:OUT", "stm32:PA0", "green", ["h20", "v40"]],\n    ["stm32:PA0", "scope:CH1", "blue", ["h30", "v60"]],\n    ["fgen:GND", "stm32:GND", "black", ["h40", "v50"]],\n    ["scope:GND", "stm32:GND", "black", ["h50", "v70"]]\n  ],\n  "dependencies": {}\n}`,
+main:`#include "stm32wbxx_hal.h"\n#include &lt;stdio.h&gt;\n#include &lt;math.h&gt;\n#include &lt;string.h&gt;\n\nADC_HandleTypeDef hadc1;\nDMA_HandleTypeDef hdma_adc1;\n\n#define ADC_BUFFER_SIZE 64\nstatic uint16_t adc_buffer[ADC_BUFFER_SIZE];\nstatic volatile uint8_t adc_half = 0;\nstatic volatile uint8_t adc_full = 0;\n\nvoid HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* h) {\n  if (h-&gt;Instance == ADC1) adc_half = 1;\n}\nvoid HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* h) {\n  if (h-&gt;Instance == ADC1) adc_full = 1;\n}\n\nfloat CalcRMS(uint16_t* s, uint16_t n) {\n  float sum = 0, v;\n  for (uint16_t i = 0; i &lt; n; i++) { v = (s[i]/4095.0f)*3.3f; sum += v*v; }\n  return sqrtf(sum/n);\n}\n\nvoid PrintScope(uint16_t* s, uint16_t n) {\n  uint16_t d = n &gt; 16 ? 16 : n;\n  printf("Scope: ");\n  for (uint16_t i = 0; i &lt; d; i++) {\n    uint16_t idx = n &gt; 16 ? n - 16 + i : i;\n    int b = (int)((s[idx]*20)/4095);\n    if (b&gt;19) b=19; char l[21]; memset(l,' ',20); l[b]='*'; l[20]='\\0';\n    printf("|%s|", l);\n  }\n  printf("\\r\\n");\n}\n\nint main(void) {\n  HAL_Init(); SystemClock_Config();\n\n  __HAL_RCC_ADC1_CLK_ENABLE(); __HAL_RCC_DMA1_CLK_ENABLE(); __HAL_RCC_GPIOA_CLK_ENABLE();\n  GPIO_InitTypeDef g = {0};\n  g.Pin = GPIO_PIN_0; g.Mode = GPIO_MODE_ANALOG; HAL_GPIO_Init(GPIOA, &amp;g);\n\n  hadc1.Instance = ADC1; hadc1.Init.Resolution = ADC_RESOLUTION_12B;\n  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT; hadc1.Init.ContinuousConvMode = ENABLE;\n  hadc1.Init.DMAContinuousRequests = ENABLE; HAL_ADC_Init(&amp;hadc1);\n  ADC_ChannelConfTypeDef c = {0}; c.Channel = ADC_CHANNEL_0; c.Rank = ADC_REGULAR_RANK_1;\n  c.SamplingTime = ADC_SAMPLETIME_84CYCLES; HAL_ADC_ConfigChannel(&amp;hadc1, &amp;c);\n\n  hdma_adc1.Instance = DMA1_Channel1; hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;\n  hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE; hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;\n  hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;\n  hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;\n  hdma_adc1.Init.Mode = DMA_CIRCULAR; hdma_adc1.Init.Priority = DMA_PRIORITY_HIGH;\n  HAL_DMA_Init(&amp;hdma_adc1); __HAL_LINKDMA(&amp;hadc1, DMA_Handle, hdma_adc1);\n\n  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0); HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);\n\n  HAL_ADC_Start_DMA(&amp;hadc1, (uint32_t*)adc_buffer, ADC_BUFFER_SIZE);\n  printf("ADC+DMA continuo\\r\\n");\n\n  while (1) {\n    if (adc_half) { adc_half = 0;\n      float rms1 = CalcRMS(&amp;adc_buffer[0], ADC_BUFFER_SIZE/2);\n      printf("RMS1=%.3fV ", rms1); PrintScope(&amp;adc_buffer[0], ADC_BUFFER_SIZE/2);\n    }\n    if (adc_full) { adc_full = 0;\n      float rms2 = CalcRMS(&amp;adc_buffer[ADC_BUFFER_SIZE/2], ADC_BUFFER_SIZE/2);\n      printf("RMS2=%.3fV\\r\\n", rms2);\n    }\n    HAL_Delay(10);\n  }\n}\n\nvoid DMA1_Channel1_IRQHandler(void) { HAL_DMA_IRQHandler(&amp;hdma_adc1); }`
+}
+};
+
+function openWokwi(lesson){
+  const data=wokwiData[lesson];
+  if(!data)return;
+  document.getElementById('modalTitle').textContent=data.title;
+  document.getElementById('codeDiagram').textContent=data.diagram;
+  document.getElementById('codeMain').textContent=data.main;
+  document.getElementById('wokwiModal').classList.add('active');
+  switchTab(0);
+}
+
+function closeWokwi(){
+  document.getElementById('wokwiModal').classList.remove('active');
+}
+
+function switchTab(idx){
+  document.querySelectorAll('.modal-tab').forEach((t,i)=>{t.classList.toggle('active',i===idx);});
+  document.querySelectorAll('.modal-panel').forEach((p,i)=>{p.classList.toggle('active',i===idx);});
+}
+
+function copyBlock(btn){
+  const pre=btn.closest('.code-header').nextElementSibling;
+  const code=pre.querySelector('code');
+  navigator.clipboard.writeText(code.textContent).then(()=>{
+    const old=btn.textContent;btn.textContent='Copiado!';
+    setTimeout(()=>btn.textContent=old,1500);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=code.textContent;document.body.appendChild(ta);
+    ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);
+    const old=btn.textContent;btn.textContent='Copiado!';
+    setTimeout(()=>btn.textContent=old,1500);
+  });
+}
+
+function copyModalCode(panelIdx){
+  const panel=document.getElementById('panel'+panelIdx);
+  const code=panel.querySelector('code');
+  navigator.clipboard.writeText(code.textContent).then(()=>{
+    const btn=panel.querySelector('.btn-copy');
+    const old=btn.textContent;btn.textContent='Copiado!';
+    setTimeout(()=>btn.textContent=old,1500);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=code.textContent;document.body.appendChild(ta);
+    ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn=panel.querySelector('.btn-copy');
+    const old=btn.textContent;btn.textContent='Copiado!';
+    setTimeout(()=>btn.textContent=old,1500);
+  });
+}
+
+function updateProgress(){
+  const cards=document.querySelectorAll('.card');
+  const scrollTop=window.scrollY+window.innerHeight*0.3;
+  let seen=0;
+  cards.forEach(card=>{if(scrollTop>card.offsetTop)seen++;});
+  const pct=(seen/cards.length)*100;
+  document.getElementById('progressFill').style.width=pct+'%';
+}
+
+window.addEventListener('scroll',updateProgress);
+window.addEventListener('load',updateProgress);
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeWokwi();});
+</script>
+
+</body>
+</html>

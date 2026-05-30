@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Industrial de Sensores — STM32N6</title>
+    <style>
+        :root {
+            --bg-dark: #0b0f14;
+            --bg-panel: #111820;
+            --bg-card: #161f2a;
+            --border: #1e2a38;
+            --accent: #00e5ff;
+            --accent-dim: #00b8cc;
+            --warn: #ffb300;
+            --danger: #ff3d3d;
+            --success: #00e676;
+            --text: #c8d6e0;
+            --text-muted: #6a7a8a;
+            --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            --font-ui: 'Segoe UI', 'Inter', system-ui, sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg-dark);
+            color: var(--text);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .brand-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+            border-radius: 8px;
+            display: grid; place-items: center;
+            font-weight: 800; color: #000; font-size: 18px;
+        }
+        .brand h1 { font-size: 18px; letter-spacing: 0.3px; }
+        .brand span { color: var(--text-muted); font-size: 12px; margin-left: 6px; }
+        .status-bar {
+            display: flex; gap: 16px; font-size: 12px; font-family: var(--font-mono);
+        }
+        .status-pill {
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px;
+        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot.ok { background: var(--success); box-shadow: 0 0 6px var(--success); }
+        .dot.warn { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+        .dot.err { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+
+        .main { display: flex; flex: 1; overflow: hidden; }
+        .canvas-area {
+            flex: 1; padding: 20px; display: grid;
+            grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 16px;
+            overflow-y: auto;
+        }
+        .sensor-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px; display: flex; flex-direction: column;
+            position: relative; overflow: hidden;
+        }
+        .sensor-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            opacity: 0.6;
+        }
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+        }
+        .card-title { font-size: 13px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--accent); }
+        .live-badge {
+            font-size: 10px; font-family: var(--font-mono); background: rgba(0,229,255,0.08);
+            color: var(--accent); border: 1px solid rgba(0,229,255,0.25);
+            padding: 2px 8px; border-radius: 4px;
+        }
+        .live-badge.blink { animation: blink 1s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .value-display {
+            font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+            margin-bottom: 8px; display: flex; align-items: baseline; gap: 8px;
+        }
+        .value-display .unit { font-size: 13px; color: var(--text-muted); font-weight: 400; }
+        .value-display .tag {
+            font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: auto;
+        }
+        .tag.ok { background: rgba(0,230,118,0.12); color: var(--success); border: 1px solid rgba(0,230,118,0.3); }
+        .tag.warn { background: rgba(255,179,0,0.12); color: var(--warn); border: 1px solid rgba(255,179,0,0.3); }
+        .tag.err { background: rgba(255,61,61,0.12); color: var(--danger); border: 1px solid rgba(255,61,61,0.3); }
+        canvas { flex: 1; width: 100%; border-radius: 8px; background: #0d1218; }
+
+        .sidebar {
+            width: 320px; background: var(--bg-panel);
+            border-left: 1px solid var(--border); padding: 20px;
+            display: flex; flex-direction: column; gap: 18px; overflow-y: auto;
+        }
+        .panel-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; }
+        .control-group {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 14px;
+        }
+        .control-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; font-size: 13px;
+        }
+        .control-row:last-child { margin-bottom: 0; }
+        .control-row label { color: var(--text-muted); }
+        .control-row .val { font-family: var(--font-mono); color: var(--accent); font-size: 12px; }
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px;
+            background: var(--border); outline: none; margin-top: 6px; margin-bottom: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+            background: var(--accent); cursor: pointer; border: 2px solid var(--bg-card);
+            box-shadow: 0 0 8px rgba(0,229,255,0.4);
+        }
+        .btn {
+            border: none; border-radius: 8px; padding: 10px 14px; font-size: 13px;
+            font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: var(--font-ui);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-dim)); color: #000; }
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-danger { background: rgba(255,61,61,0.12); color: var(--danger); border: 1px solid rgba(255,61,61,0.3); }
+        .btn-danger:hover { background: rgba(255,61,61,0.2); }
+        .btn-success { background: rgba(0,230,118,0.12); color: var(--success); border: 1px solid rgba(0,230,118,0.3); }
+        .btn-success:hover { background: rgba(0,230,118,0.2); }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-group .btn { flex: 1; min-width: 100px; }
+
+        .fault-panel { display: none; }
+        .fault-panel.active { display: block; }
+        .fault-msg {
+            font-family: var(--font-mono); font-size: 11px; background: rgba(255,61,61,0.08);
+            border: 1px dashed rgba(255,61,61,0.4); color: var(--danger);
+            padding: 8px 10px; border-radius: 6px; margin-top: 8px;
+        }
+
+        .export-area { display: none; flex-direction: column; gap: 10px; }
+        .export-area.active { display: flex; }
+        textarea {
+            width: 100%; min-height: 220px; background: #0d1218; color: var(--text);
+            border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+            font-family: var(--font-mono); font-size: 11px; resize: vertical;
+        }
+        .copy-hint { font-size: 11px; color: var(--text-muted); text-align: center; }
+
+        .legend { display: flex; gap: 12px; font-size: 11px; color: var(--text-muted); margin-top: 4px; flex-wrap: wrap; }
+        .legend span { display: flex; align-items: center; gap: 4px; }
+        .legend i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+        @media (max-width: 900px) {
+            .main { flex-direction: column; }
+            .sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border); }
+            .canvas-area { grid-template-columns: 1fr; grid-template-rows: repeat(4, 280px); }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="brand">
+        <div class="brand-icon">S</div>
+        <div>
+            <h1>Simulador Industrial de Sensores <span>v2.0 — STM32N6</span></h1>
+        </div>
+    </div>
+    <div class="status-bar">
+        <div class="status-pill"><span class="dot ok" id="sysDot"></span> Sistema OK</div>
+        <div class="status-pill"><span class="dot ok" id="connDot"></span> I2C/SPI</div>
+        <div class="status-pill" id="fpsPill">FPS: <span id="fpsVal">60</span></div>
+    </div>
+</header>
+
+<div class="main">
+    <div class="canvas-area">
+        <!-- TMP117 -->
+        <div class="sensor-card">
+            <div class="card-header">
+                <div class="card-title">TMP117 — Temperatura</div>
+                <div class="live-badge blink">● LIVE</div>
+            </div>
+            <div class="value-display">
+                <span id="valTMP">24.50</span><span class="unit">°C</span>
+                <span class="tag ok" id="tagTMP">NORMAL</span>
+            </div>
+            <canvas id="canvasTMP" height="180"></canvas>
+            <div class="legend">
+                <span><i style="background:#00e5ff"></i> Temperatura</span>
+                <span><i style="background:#ff3d3d"></i> Límite</span>
+            </div>
+        </div>
+
+        <!-- BMP280 -->
+        <div class="sensor-card">
+            <div class="card-header">
+                <div class="card-title">BMP280 — Presión Barométrica</div>
+                <div class="live-badge blink">● LIVE</div>
+            </div>
+            <div class="value-display">
+                <span id="valBMP">1013.25</span><span class="unit">hPa</span>
+                <span class="tag ok" id="tagBMP">NORMAL</span>
+            </div>
+            <canvas id="canvasBMP" height="180"></canvas>
+            <div class="legend">
+                <span><i style="background:#00e676"></i> Presión</span>
+                <span><i style="background:#ffb300"></i> Drift</span>
+            </div>
+        </div>
+
+        <!-- MPU6050 -->
+        <div class="sensor-card">
+            <div class="card-header">
+                <div class="card-title">MPU6050 — Acelerómetro 3 Ejes</div>
+                <div class="live-badge blink">● LIVE</div>
+            </div>
+            <div class="value-display">
+                <span id="valMPU">X:0.02 Y:-0.01 Z:0.98</span><span class="unit">g</span>
+                <span class="tag ok" id="tagMPU">NORMAL</span>
+            </div>
+            <canvas id="canvasMPU" height="180"></canvas>
+            <div class="legend">
+                <span><i style="background:#ff3d3d"></i> X</span>
+                <span><i style="background:#00e676"></i> Y</span>
+                <span><i style="background:#00e5ff"></i> Z</span>
+            </div>
+        </div>
+
+        <!-- Encoder -->
+        <div class="sensor-card">
+            <div class="card-header">
+                <div class="card-title">Encoder Rotativo — Posición / RPM</div>
+                <div class="live-badge blink">● LIVE</div>
+            </div>
+            <div class="value-display">
+                <span id="valENC">127.4°</span><span class="unit">—</span>
+                <span id="valRPM" style="font-size:14px;color:var(--text-muted)">RPM: 120</span>
+                <span class="tag ok" id="tagENC">NORMAL</span>
+            </div>
+            <canvas id="canvasENC" height="180"></canvas>
+            <div class="legend">
+                <span><i style="background:#ffb300"></i> Ángulo</span>
+                <span><i style="background:#00e5ff"></i> RPM</span>
+            </div>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div>
+            <div class="panel-title">Frecuencia de Muestreo</div>
+            <div class="control-group">
+                <div class="control-row"><label>Hz</label><span class="val" id="hzVal">10 Hz</span></div>
+                <input type="range" id="hzSlider" min="1" max="100" value="10">
+            </div>
+        </div>
+
+        <div>
+            <div class="panel-title">Rangos de Simulación</div>
+            <div class="control-group">
+                <div class="control-row"><label>TMP117 mín</label><span class="val" id="tMinVal">-40°C</span></div>
+                <input type="range" id="tMin" min="-40" max="100" value="-40">
+                <div class="control-row" style="margin-top:8px"><label>TMP117 máx</label><span class="val" id="tMaxVal">150°C</span></div>
+                <input type="range" id="tMax" min="0" max="200" value="150">
+
+                <div class="control-row" style="margin-top:10px"><label>BMP280 mín</label><span class="val" id="pMinVal">300 hPa</span></div>
+                <input type="range" id="pMin" min="200" max="900" value="300">
+                <div class="control-row" style="margin-top:8px"><label>BMP280 máx</label><span class="val" id="pMaxVal">1100 hPa</span></div>
+                <input type="range" id="pMax" min="600" max="1200" value="1100">
+            </div>
+        </div>
+
+        <div>
+            <div class="panel-title">Encoder — Velocidad RPM</div>
+            <div class="control-group">
+                <div class="control-row"><label>RPM</label><span class="val" id="rpmVal">120</span></div>
+                <input type="range" id="rpmSlider" min="0" max="3000" value="120">
+            </div>
+        </div>
+
+        <div>
+            <div class="panel-title">Inyectar Fallas</div>
+            <div class="control-group">
+                <div class="btn-group">
+                    <button class="btn btn-danger" onclick="injectFault('comm')">Error I2C</button>
+                    <button class="btn btn-danger" onclick="injectFault('range')">Fuera de Rango</button>
+                    <button class="btn btn-danger" onclick="injectFault('noise')">Ruido Excesivo</button>
+                </div>
+                <button class="btn btn-success" style="width:100%;margin-top:10px" onclick="clearFaults()">Restaurar Sensores</button>
+                <div class="fault-panel" id="faultPanel">
+                    <div class="fault-msg" id="faultMsg">—</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="panel-title">Exportar a Wokwi</div>
+            <button class="btn btn-primary" style="width:100%" onclick="exportWokwi()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Generar diagram.json
+            </button>
+            <div class="export-area" id="exportArea">
+                <textarea id="wokwiJson" readonly></textarea>
+                <div class="copy-hint">Copia el contenido y pégalo en Wokwi → diagram.json</div>
+                <button class="btn btn-primary" style="width:100%" onclick="copyWokwi()">Copiar al Portapapeles</button>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<script>
+/* ============================
+   UTILIDADES
+   ============================ */
+const $ = id => document.getElementById(id);
+const randn = () => {
+    let u=0, v=0;
+    while(u===0) u=Math.random();
+    while(v===0) v=Math.random();
+    return Math.sqrt(-2*Math.log(u)) * Math.cos(2*Math.PI*v);
+};
+function fitCanvas(canvas) {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width - 28;
+    canvas.height = 180;
+}
+
+/* ============================
+   ESTADO GLOBAL
+   ============================ */
+const state = {
+    hz: 10,
+    tMin: -40, tMax: 150,
+    pMin: 300, pMax: 1100,
+    rpm: 120,
+    faults: { comm: false, range: false, noise: false },
+    lastTs: performance.now(),
+    fps: 60,
+};
+
+/* Buffers de datos */
+const MAX_POINTS = 200;
+const tmpData = [];
+const bmpData = [];
+const mpuData = [];
+const encData = [];
+
+/* Simulación interna */
+let tmpBase = 24.5, tmpTarget = 24.5;
+let bmpBase = 1013.25, bmpDrift = 0;
+let mpuPhase = 0;
+let encAngle = 0;
+let encAccum = 0;
+
+/* ============================
+   CONTROLES UI
+   ============================ */
+$('hzSlider').oninput = e => { state.hz = +e.target.value; $('hzVal').textContent = state.hz + ' Hz'; };
+$('tMin').oninput = e => { state.tMin = +e.target.value; $('tMinVal').textContent = state.tMin + '°C'; };
+$('tMax').oninput = e => { state.tMax = +e.target.value; $('tMaxVal').textContent = state.tMax + '°C'; };
+$('pMin').oninput = e => { state.pMin = +e.target.value; $('pMinVal').textContent = state.pMin + ' hPa'; };
+$('pMax').oninput = e => { state.pMax = +e.target.value; $('pMaxVal').textContent = state.pMax + ' hPa'; };
+$('rpmSlider').oninput = e => { state.rpm = +e.target.value; $('rpmVal').textContent = state.rpm; };
+
+function injectFault(type) {
+    state.faults[type] = true;
+    const msgs = {
+        comm: 'FALLA: Error de comunicación I2C/SPI detectado en bus principal.',
+        range: 'FALLA: Valor fuera de rango operativo en uno o más sensores.',
+        noise: 'FALLA: Ruido gaussiano excede 3σ en lecturas de temperatura.'
+    };
+    $('faultPanel').classList.add('active');
+    $('faultMsg').textContent = msgs[type];
+    $('sysDot').className = 'dot err';
+}
+function clearFaults() {
+    state.faults = { comm: false, range: false, noise: false };
+    $('faultPanel').classList.remove('active');
+    $('sysDot').className = 'dot ok';
+}
+
+/* ============================
+   SIMULACIÓN DE SENSORES
+   ============================ */
+function updateSensors(dt) {
+    /* TMP117: ruido gaussiano, variación lenta */
+    tmpTarget += (Math.random() - 0.5) * 0.15;
+    tmpBase += (tmpTarget - tmpBase) * 0.05;
+    let tmp = tmpBase + randn() * (state.faults.noise ? 2.5 : 0.08);
+    if (state.faults.range) tmp = state.tMax + 30;
+    if (state.faults.comm) tmp = null;
+    tmpData.push(tmp);
+    if (tmpData.length > MAX_POINTS) tmpData.shift();
+
+    /* BMP280: drift lento */
+    bmpDrift += (Math.random() - 0.5) * 0.02;
+    bmpBase += bmpDrift * 0.1;
+    let bmp = bmpBase + Math.sin(Date.now()/8000)*2 + randn()*0.15;
+    if (state.faults.range) bmp = state.pMin - 100;
+    if (state.faults.comm) bmp = null;
+    bmpData.push(bmp);
+    if (bmpData.length > MAX_POINTS) bmpData.shift();
+
+    /* MPU6050: 3 ejes con vibración */
+    mpuPhase += dt * 2;
+    let ax = Math.sin(mpuPhase)*0.05 + randn()*0.02;
+    let ay = Math.cos(mpuPhase*0.7)*0.04 + randn()*0.02;
+    let az = 0.98 + Math.sin(mpuPhase*1.3)*0.03 + randn()*0.02;
+    if (state.faults.noise) { ax += randn()*0.4; ay += randn()*0.4; az += randn()*0.4; }
+    if (state.faults.range) { ax=3.5; ay=-2.8; az=4.1; }
+    if (state.faults.comm) { ax=null; ay=null; az=null; }
+    mpuData.push({x:ax, y:ay, z:az});
+    if (mpuData.length > MAX_POINTS) mpuData.shift();
+
+    /* Encoder: RPM -> grados por frame */
+    const degPerSec = state.rpm * 360 / 60;
+    encAccum += degPerSec * dt;
+    encAngle = encAccum % 360;
+    if (encAngle < 0) encAngle += 360;
+    let enc = encAngle;
+    if (state.faults.comm) enc = null;
+    encData.push(enc);
+    if (encData.length > MAX_POINTS) encData.shift();
+}
+
+/* ============================
+   RENDER CANVAS
+   ============================ */
+function drawGrid(ctx, w, h, color='#1e2a38') {
+    ctx.strokeStyle = color; ctx.lineWidth = 1;
+    for (let x=0; x<w; x+=40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for (let y=0; y<h; y+=30) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+}
+
+function drawLineChart(canvas, data, color, min, max, label, unit) {
+    fitCanvas(canvas);
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx,w,h);
+    if (!data.length) return;
+
+    const range = max - min || 1;
+    const toY = v => h - ((v - min) / range) * (h - 20) - 10;
+    const toX = i => (i / (MAX_POINTS-1)) * w;
+
+    ctx.beginPath();
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    let started = false;
+    for (let i=0; i<data.length; i++) {
+        const v = data[i];
+        if (v === null) { started = false; continue; }
+        const x = toX(i + (MAX_POINTS - data.length));
+        const y = toY(v);
+        if (!started) { ctx.moveTo(x,y); started = true; }
+        else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    /* glow */
+    ctx.save();
+    ctx.shadowColor = color; ctx.shadowBlur = 10;
+    ctx.stroke(); ctx.restore();
+
+    /* último valor */
+    const last = data[data.length-1];
+    if (last !== null) {
+        const lx = toX(data.length-1 + (MAX_POINTS - data.length));
+        const ly = toY(last);
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI*2); ctx.fill();
+    }
+}
+
+function drawBarChart(canvas, data) {
+    fitCanvas(canvas);
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx,w,h);
+    if (!data.length) return;
+    const last = data[data.length-1];
+    if (!last || last.x===null) return;
+
+    const vals = [last.x, last.y, last.z];
+    const colors = ['#ff3d3d','#00e676','#00e5ff'];
+    const labels = ['X','Y','Z'];
+    const maxG = 2.5;
+    const barW = 40;
+    const gap = (w - barW*3)/4;
+
+    vals.forEach((v,i) => {
+        const bh = Math.min(Math.abs(v)/maxG, 1) * (h-30);
+        const x = gap + i*(barW+gap);
+        const y = h/2 - (v>0 ? bh : 0);
+        ctx.fillStyle = colors[i];
+        ctx.shadowColor = colors[i]; ctx.shadowBlur = 12;
+        ctx.fillRect(x, y, barW, Math.max(bh, 2));
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px "Fira Code", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(labels[i], x+barW/2, h-6);
+        ctx.fillText(v.toFixed(2), x+barW/2, y-8);
+    });
+
+    /* línea cero */
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+}
+
+function drawEncoder(canvas, data) {
+    fitCanvas(canvas);
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx,w,h);
+    if (!data.length) return;
+    const last = data[data.length-1];
+    if (last === null) return;
+
+    const cx = w/2, cy = h/2, r = Math.min(w,h)/2 - 30;
+    /* fondo dial */
+    ctx.strokeStyle = '#1e2a38'; ctx.lineWidth = 10;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+
+    /* ticks */
+    for (let i=0; i<360; i+=30) {
+        const a = (i-90)*Math.PI/180;
+        const x1 = cx + Math.cos(a)*(r-6), y1 = cy + Math.sin(a)*(r-6);
+        const x2 = cx + Math.cos(a)*(r+2), y2 = cy + Math.sin(a)*(r+2);
+        ctx.strokeStyle = '#2a3a4a'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    }
+
+    /* aguja */
+    const rad = (last-90)*Math.PI/180;
+    const x = cx + Math.cos(rad)*(r-8);
+    const y = cy + Math.sin(rad)*(r-8);
+    ctx.strokeStyle = '#ffb300'; ctx.lineWidth = 3;
+    ctx.shadowColor = '#ffb300'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    /* centro */
+    ctx.fillStyle = '#ffb300';
+    ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI*2); ctx.fill();
+
+    /* texto */
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Fira Code", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(last.toFixed(1) + '°', cx, cy+28);
+}
+
+/* ============================
+   LOOP PRINCIPAL
+   ============================ */
+let simAccum = 0;
+function loop(ts) {
+    const dt = (ts - state.lastTs) / 1000;
+    state.lastTs = ts;
+    state.fps = Math.round(1/dt);
+    $('fpsVal').textContent = state.fps;
+
+    simAccum += dt;
+    const interval = 1 / state.hz;
+    while (simAccum >= interval) {
+        updateSensors(interval);
+        simAccum -= interval;
+    }
+
+    /* Actualizar valores en pantalla */
+    const t = tmpData[tmpData.length-1];
+    $('valTMP').textContent = t !== null ? t.toFixed(2) : 'ERR';
+    $('tagTMP').textContent = t !== null ? (t>state.tMax||t<state.tMin?'ALERTA':'NORMAL') : 'ERROR';
+    $('tagTMP').className = 'tag ' + (t!==null ? (t>state.tMax||t<state.tMin?'err':'ok') : 'err');
+
+    const p = bmpData[bmpData.length-1];
+    $('valBMP').textContent = p !== null ? p.toFixed(2) : 'ERR';
+    $('tagBMP').textContent = p !== null ? (p>state.pMax||p<state.pMin?'ALERTA':'NORMAL') : 'ERROR';
+    $('tagBMP').className = 'tag ' + (p!==null ? (p>state.pMax||p<state.pMin?'err':'ok') : 'err');
+
+    const m = mpuData[mpuData.length-1];
+    if (m && m.x!==null) {
+        $('valMPU').textContent = `X:${m.x.toFixed(2)} Y:${m.y.toFixed(2)} Z:${m.z.toFixed(2)}`;
+        $('tagMPU').textContent = 'NORMAL'; $('tagMPU').className = 'tag ok';
+    } else {
+        $('valMPU').textContent = 'ERR I2C'; $('tagMPU').textContent = 'ERROR'; $('tagMPU').className = 'tag err';
+    }
+
+    const e = encData[encData.length-1];
+    $('valENC').textContent = e !== null ? e.toFixed(1) + '°' : 'ERR';
+    $('valRPM').textContent = 'RPM: ' + state.rpm;
+    $('tagENC').textContent = e !== null ? 'NORMAL' : 'ERROR';
+    $('tagENC').className = 'tag ' + (e!==null?'ok':'err');
+
+    /* Render */
+    drawLineChart($('canvasTMP'), tmpData, '#00e5ff', state.tMin-5, state.tMax+5);
+    drawLineChart($('canvasBMP'), bmpData, '#00e676', state.pMin-20, state.pMax+20);
+    drawBarChart($('canvasMPU'), mpuData);
+    drawEncoder($('canvasENC'), encData);
+
+    requestAnimationFrame(loop);
+}
+
+/* ============================
+   EXPORTAR A WOKWI
+   ============================ */
+function exportWokwi() {
+    const diagram = {
+        version: 1,
+        author: "Simulador Industrial STM32N6",
+        editor: "wokwi",
+        parts: [
+            { id: "mcu", type: "board-st-nucleo-c031c6", top: 0, left: 0, attrs: {} },
+            { id: "tmp117", type: "wokwi-tmp117", top: 40, left: 220, attrs: {} },
+            { id: "bmp280", type: "wokwi-bmp280", top: 120, left: 220, attrs: {} },
+            { id: "mpu6050", type: "wokwi-mpu6050", top: 200, left: 220, attrs: {} },
+            { id: "encoder", type: "wokwi-rotary-encoder", top: 300, left: 220, attrs: {} }
+        ],
+        connections: [
+            ["mcu:PA9",  "tmp117:SDA",  "green", ["h40"]],
+            ["mcu:PA8",  "tmp117:SCL",  "green", ["h40"]],
+            ["mcu:3.3V", "tmp117:VCC",  "red",   ["h20"]],
+            ["mcu:GND",  "tmp117:GND",  "black", ["h20"]],
+            ["mcu:PB7",  "bmp280:SDA",  "blue",  ["h50"]],
+            ["mcu:PB6",  "bmp280:SCL",  "blue",  ["h50"]],
+            ["mcu:3.3V", "bmp280:VCC",  "red",   ["h30"]],
+            ["mcu:GND",  "bmp280:GND",  "black", ["h30"]],
+            ["mcu:PB9",  "mpu6050:SDA", "orange",["h60"]],
+            ["mcu:PB8",  "mpu6050:SCL", "orange",["h60"]],
+            ["mcu:3.3V", "mpu6050:VCC", "red",   ["h40"]],
+            ["mcu:GND",  "mpu6050:GND", "black", ["h40"]],
+            ["mcu:PA0",  "encoder:CLK", "purple",["h70"]],
+            ["mcu:PA1",  "encoder:DT",  "purple",["h70"]],
+            ["mcu:PA2",  "encoder:SW",  "purple",["h70"]],
+            ["mcu:GND",  "encoder:GND", "black", ["h50"]],
+            ["mcu:3.3V", "encoder:VCC", "red",   ["h50"]]
+        ],
+        dependencies: {}
+    };
+    $('wokwiJson').value = JSON.stringify(diagram, null, 2);
+    $('exportArea').classList.add('active');
+}
+function copyWokwi() {
+    $('wokwiJson').select();
+    document.execCommand('copy');
+    alert('diagram.json copiado al portapapeles. Pégalo en Wokwi.');
+}
+
+/* Iniciar */
+requestAnimationFrame(loop);
+window.addEventListener('resize', () => {
+    drawLineChart($('canvasTMP'), tmpData, '#00e5ff', state.tMin-5, state.tMax+5);
+    drawLineChart($('canvasBMP'), bmpData, '#00e676', state.pMin-20, state.pMax+20);
+    drawBarChart($('canvasMPU'), mpuData);
+    drawEncoder($('canvasENC'), encData);
+});
+</script>
+</body>
+</html>
